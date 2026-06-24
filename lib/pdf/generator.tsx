@@ -150,6 +150,61 @@ interface Props {
   subject: Subject
 }
 
+interface SinglePageProps {
+  page: AlbumPage
+  album: Album
+  subject: Subject
+}
+
+/** 1ページ単体のA4 PDF */
+export function SinglePagePDF({ page, album, subject }: SinglePageProps) {
+  return (
+    <Document title={`${album.title} - ${page.title || `p.${page.page_number}`}`} author="histori.">
+      <Page size="A4" style={s.page}>
+        <View style={s.header}>
+          {page.title && <Text style={s.headerTitle}>{page.title}</Text>}
+          {page.life_stage && (
+            <Text style={s.headerStage}>{STAGE_LABELS[page.life_stage] || page.life_stage}</Text>
+          )}
+        </View>
+
+        {page.template === 'text_only' ? (
+          <View style={{ flex: 1 }}>
+            {page.body_text && <Text style={s.bodyText}>{page.body_text}</Text>}
+          </View>
+        ) : page.template === 'large_photo' ? (
+          <View style={{ flex: 1 }}>
+            {page.photo_urls?.[0] && <Image src={page.photo_urls[0]} style={s.photoLarge} />}
+            {page.body_text && <Text style={s.bodyText}>{page.body_text}</Text>}
+          </View>
+        ) : page.template === 'grid' ? (
+          <View style={{ flex: 1 }}>
+            <View style={s.photoGrid}>
+              {(page.photo_urls || []).slice(0, 4).map((url, i) => (
+                <Image key={i} src={url} style={s.photoGridItem} />
+              ))}
+            </View>
+            {page.body_text && <Text style={s.bodyText}>{page.body_text}</Text>}
+          </View>
+        ) : (
+          <View style={s.body}>
+            <View style={s.textArea}>
+              {page.title && <Text style={s.pageTitle}>{page.title}</Text>}
+              {page.body_text && <Text style={s.bodyText}>{page.body_text}</Text>}
+            </View>
+            {page.photo_urls?.[0] && <Image src={page.photo_urls[0]} style={s.photo} />}
+          </View>
+        )}
+
+        <View style={s.footer}>
+          <Text>{subject.name} さんのアルバム</Text>
+          <Text>— {page.page_number} —</Text>
+        </View>
+      </Page>
+    </Document>
+  )
+}
+
 export function AlbumPDF({ album, pages, subject }: Props) {
   return (
     <Document title={album.title} author="histori.">

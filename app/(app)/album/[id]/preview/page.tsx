@@ -74,6 +74,13 @@ export default async function AlbumPreviewPage({
                 </span>
               )}
             </div>
+            <Link
+              href={`/api/pdf?albumId=${id}&pageId=${page.id}`}
+              target="_blank"
+              className="h-8 px-3 bg-[#1B3A6B] text-white text-xs font-bold rounded-lg hover:bg-[#162d54] flex items-center gap-1"
+            >
+              🖨 このページをA4印刷
+            </Link>
           </div>
 
           <div className={`p-6 ${page.template === 'large_photo' ? 'p-0' : ''}`}>

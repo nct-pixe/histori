@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { DEMO_ALBUM, DEMO_PAGES, DEMO_SUBJECT } from '@/lib/demo/mockData'
-import DemoPDFButton from './DemoPDFButton'
+import DemoPDFButton, { DemoSinglePagePDFButton } from './DemoPDFButton'
 
 const STAGE_LABELS: Record<string, string> = {
   childhood: '幼少期', school: '学校時代', youth: '青年期',
@@ -31,13 +31,16 @@ export default function DemoAlbumPreview() {
       {/* ページ */}
       {DEMO_PAGES.map((page) => (
         <div key={page.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-6 overflow-hidden">
-          <div className="bg-gray-50 border-b border-gray-100 px-6 py-3 flex items-center gap-3">
-            <span className="text-lg font-bold text-[#1B3A6B]">{page.page_number}</span>
-            {page.life_stage && (
-              <span className="px-3 py-1 bg-teal-50 text-[#0D9488] text-sm rounded-full font-medium">
-                {STAGE_LABELS[page.life_stage]}
-              </span>
-            )}
+          <div className="bg-gray-50 border-b border-gray-100 px-6 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-lg font-bold text-[#1B3A6B]">{page.page_number}</span>
+              {page.life_stage && (
+                <span className="px-3 py-1 bg-teal-50 text-[#0D9488] text-sm rounded-full font-medium">
+                  {STAGE_LABELS[page.life_stage]}
+                </span>
+              )}
+            </div>
+            <DemoSinglePagePDFButton page={page} album={DEMO_ALBUM} subject={DEMO_SUBJECT} />
           </div>
           <div className="p-6">
             {page.title && <h2 className="text-2xl font-bold text-[#1B3A6B] mb-4">{page.title}</h2>}
