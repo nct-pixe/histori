@@ -19,6 +19,11 @@ const STAGE_LABELS: Record<string, string> = {
   family: '家庭期', prime: '働き盛り', senior: '晩年期', present: '現在',
 }
 
+const inputStyle = {
+  border: '1.5px solid #E2E8F0', borderRadius: '12px',
+  padding: '10px 14px', fontSize: '1rem', color: '#1F2937', outline: 'none', width: '100%',
+}
+
 interface Props {
   album: Album
   pages: AlbumPage[]
@@ -42,8 +47,7 @@ export default function AlbumEditClient({ album, pages: initialPages, subject, a
     const { data, error } = await supabase
       .from('album_pages')
       .insert({ album_id: album.id, page_number: newPageNum, template: 'standard' })
-      .select()
-      .single()
+      .select().single()
     if (!error && data) {
       setPages((prev) => [...prev, data as AlbumPage])
       setEditing(data as AlbumPage)
@@ -54,24 +58,16 @@ export default function AlbumEditClient({ album, pages: initialPages, subject, a
   async function savePage(page: AlbumPage) {
     setSaving(true)
     let photoUrls = page.photo_urls || []
-
     if (photoFile) {
       const path = `photos/${album.subject_id}/${Date.now()}_${photoFile.name}`
-      const { data: uploadData } = await supabase.storage.from('media').upload(path, photoFile)
+      const { data: uploadData } = await supabase.storage.from('album-photos').upload(path, photoFile)
       if (uploadData) {
-        const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(path)
+        const { data: { publicUrl } } = supabase.storage.from('album-photos').getPublicUrl(path)
         photoUrls = [...photoUrls, publicUrl]
       }
       setPhotoFile(null)
     }
-
-    const { data } = await supabase
-      .from('album_pages')
-      .update({ ...page, photo_urls: photoUrls })
-      .eq('id', page.id)
-      .select()
-      .single()
-
+    const { data } = await supabase.from('album_pages').update({ ...page, photo_urls: photoUrls }).eq('id', page.id).select().single()
     if (data) {
       setPages((prev) => prev.map((p) => (p.id === page.id ? (data as AlbumPage) : p)))
       setEditing(data as AlbumPage)
@@ -89,13 +85,8 @@ export default function AlbumEditClient({ album, pages: initialPages, subject, a
   async function togglePublish() {
     setPublishing(true)
     const token = album.share_token || Math.random().toString(36).slice(2)
-    const { data } = await supabase
-      .from('albums')
-      .update({ is_published: !album.is_published, share_token: token })
-      .eq('id', album.id)
-      .select()
-      .single()
-    if (data) router.refresh()
+    await supabase.from('albums').update({ is_published: !album.is_published, share_token: token }).eq('id', album.id)
+    router.refresh()
     setPublishing(false)
   }
 
@@ -108,35 +99,30 @@ export default function AlbumEditClient({ album, pages: initialPages, subject, a
   return (
     <div>
       {/* ヘッダー */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-start justify-between mb-6">
         <div>
-          <Link href="/album" className="text-base text-[#0D9488] hover:underline">← アルバム一覧</Link>
-          <h1 className="text-3xl font-bold text-[#1B3A6B] mt-1">{album.title}</h1>
-          <p className="text-lg text-gray-500">{subject?.name} さん</p>
+          <Link href="/album" className="text-sm font-medium hover:underline" style={{ color: '#0D9488' }}>
+            ← アルバム一覧
+          </Link>
+          <h1 className="text-3xl font-bold mt-1" style={{ color: '#1B3A6B', fontFamily: 'serif' }}>{album.title}</h1>
+          <p className="text-sm mt-0.5" style={{ color: '#64748B' }}>{subject?.name} さん</p>
         </div>
-        <div className="flex gap-3">
-          <Link
-            href={`/album/${album.id}/preview`}
-            className="h-12 px-5 bg-[#0D9488] text-white text-base font-bold rounded-xl hover:bg-teal-700 flex items-center"
-          >
+        <div className="flex gap-2 flex-wrap justify-end">
+          <Link href={`/album/${album.id}/preview`}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-bold text-white hover:opacity-90"
+            style={{ background: '#0D9488' }}>
             👁 プレビュー
           </Link>
-          <Link
-            href={`/api/pdf?albumId=${album.id}`}
-            target="_blank"
-            className="h-12 px-5 bg-[#D97706] text-white text-base font-bold rounded-xl hover:bg-amber-600 flex items-center"
-          >
+          <Link href={`/api/pdf?albumId=${album.id}`} target="_blank"
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-bold text-white hover:opacity-90"
+            style={{ background: '#D97706' }}>
             📄 PDF出力
           </Link>
-          <button
-            onClick={togglePublish}
-            disabled={publishing}
-            className={`h-12 px-5 text-base font-bold rounded-xl transition-colors ${
-              album.is_published
-                ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
+          <button onClick={togglePublish} disabled={publishing}
+            className="px-4 py-2.5 rounded-full text-sm font-bold transition-colors"
+            style={album.is_published
+              ? { background: '#F0FDF4', color: '#16A34A' }
+              : { background: '#F1F5F9', color: '#64748B' }}>
             {album.is_published ? '✓ 公開中' : '🔒 非公開'}
           </button>
         </div>
@@ -144,41 +130,38 @@ export default function AlbumEditClient({ album, pages: initialPages, subject, a
 
       <div className="grid grid-cols-3 gap-6">
         {/* ページ一覧（左） */}
-        <div className="col-span-1 space-y-3">
-          <h2 className="text-xl font-bold text-[#1F2937]">ページ一覧</h2>
+        <div className="col-span-1 space-y-2">
+          <h2 className="text-base font-bold mb-3" style={{ color: '#374151' }}>ページ一覧</h2>
           {pages.map((page) => (
-            <div
-              key={page.id}
-              onClick={() => setEditing(page)}
-              className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                editing?.id === page.id ? 'border-[#0D9488] bg-teal-50' : 'border-gray-100 bg-white hover:border-gray-300'
-              }`}
-            >
+            <div key={page.id} onClick={() => setEditing(page)}
+              className="p-4 rounded-xl cursor-pointer transition-all"
+              style={{
+                border: editing?.id === page.id ? '2px solid #0D9488' : '1.5px solid #E2E8F0',
+                background: editing?.id === page.id ? '#F0FDF4' : 'white',
+              }}>
               <div className="flex items-center justify-between">
-                <span className="text-lg font-bold text-[#1F2937]">
+                <span className="text-base font-bold" style={{ color: '#1B3A6B' }}>
                   {page.page_number} ページ
                 </span>
-                <button
-                  onClick={(e) => { e.stopPropagation(); deletePage(page.id) }}
-                  className="text-red-400 hover:text-red-600 text-sm"
-                >
+                <button onClick={(e) => { e.stopPropagation(); deletePage(page.id) }}
+                  className="text-xs hover:opacity-80" style={{ color: '#EF4444' }}>
                   削除
                 </button>
               </div>
-              {page.title && <p className="text-base text-gray-600 mt-1 truncate">{page.title}</p>}
+              {page.title && <p className="text-sm mt-0.5 truncate" style={{ color: '#64748B' }}>{page.title}</p>}
               {page.life_stage && (
-                <span className="text-sm text-[#0D9488]">{STAGE_LABELS[page.life_stage]}</span>
+                <span className="text-xs font-medium" style={{ color: '#0D9488' }}>{STAGE_LABELS[page.life_stage]}</span>
               )}
               {(page.photo_urls?.length ?? 0) > 0 && (
-                <p className="text-sm text-gray-400">📷 {page.photo_urls!.length}枚</p>
+                <p className="text-xs mt-0.5" style={{ color: '#94A3B8' }}>📷 {page.photo_urls!.length}枚</p>
               )}
             </div>
           ))}
-          <button
-            onClick={addPage}
-            disabled={saving}
-            className="w-full h-14 border-2 border-dashed border-gray-300 text-gray-500 text-lg font-medium rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition-colors"
-          >
+          <button onClick={addPage} disabled={saving}
+            className="w-full py-3.5 rounded-xl text-sm font-medium transition-colors"
+            style={{ border: '1.5px dashed #CBD5E1', color: '#64748B' }}
+            onMouseOver={(e) => { (e.target as HTMLButtonElement).style.borderColor = '#0D9488'; (e.target as HTMLButtonElement).style.color = '#0D9488' }}
+            onMouseOut={(e) => { (e.target as HTMLButtonElement).style.borderColor = '#CBD5E1'; (e.target as HTMLButtonElement).style.color = '#64748B' }}>
             ＋ ページを追加
           </button>
         </div>
@@ -186,25 +169,25 @@ export default function AlbumEditClient({ album, pages: initialPages, subject, a
         {/* ページ編集（右） */}
         <div className="col-span-2">
           {editing ? (
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
-              <h2 className="text-xl font-bold text-[#1F2937]">
+            <div className="bg-white rounded-2xl p-6 space-y-5" style={{ border: '1px solid #E2E8F0' }}>
+              <h2 className="text-lg font-bold" style={{ color: '#1B3A6B', fontFamily: 'serif' }}>
                 {editing.page_number} ページを編集
               </h2>
 
-              {/* テンプレート選択 */}
+              {/* テンプレート */}
               <div>
-                <label className="block text-base font-medium mb-2">レイアウト</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>レイアウト</label>
                 <div className="grid grid-cols-4 gap-2">
                   {TEMPLATES.map((t) => (
-                    <button
-                      key={t.id}
+                    <button key={t.id}
                       onClick={() => setEditing({ ...editing, template: t.id as AlbumPage['template'] })}
-                      className={`p-3 rounded-xl border-2 text-sm transition-colors ${
-                        editing.template === t.id ? 'border-[#0D9488] bg-teal-50' : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <div className="font-bold">{t.label}</div>
-                      <div className="text-gray-500 mt-0.5">{t.desc}</div>
+                      className="p-3 rounded-xl text-sm transition-all"
+                      style={{
+                        border: editing.template === t.id ? '2px solid #0D9488' : '1.5px solid #E2E8F0',
+                        background: editing.template === t.id ? '#F0FDF4' : 'white',
+                      }}>
+                      <div className="font-bold" style={{ color: '#1B3A6B' }}>{t.label}</div>
+                      <div className="text-xs mt-0.5" style={{ color: '#94A3B8' }}>{t.desc}</div>
                     </button>
                   ))}
                 </div>
@@ -212,30 +195,23 @@ export default function AlbumEditClient({ album, pages: initialPages, subject, a
 
               {/* ライフステージ */}
               <div>
-                <label className="block text-base font-medium mb-2">ライフステージ（任意）</label>
-                <select
-                  value={editing.life_stage || ''}
-                  onChange={(e) => setEditing({ ...editing, life_stage: e.target.value })}
-                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-[#0D9488]"
-                >
+                <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>ライフステージ（任意）</label>
+                <select value={editing.life_stage || ''} onChange={(e) => setEditing({ ...editing, life_stage: e.target.value })}
+                  style={{ ...inputStyle, appearance: 'auto' }}>
                   <option value="">選択しない</option>
-                  {Object.entries(STAGE_LABELS).map(([k, v]) => (
-                    <option key={k} value={k}>{v}</option>
-                  ))}
+                  {Object.entries(STAGE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                 </select>
               </div>
 
               {/* タイトル */}
               <div>
-                <label className="block text-base font-medium mb-2">ページタイトル</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>ページタイトル</label>
                 <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={editing.title || ''}
+                  <input type="text" value={editing.title || ''}
                     onChange={(e) => setEditing({ ...editing, title: e.target.value })}
-                    className="flex-1 border-2 border-gray-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-[#0D9488]"
-                    placeholder="例：故郷の思い出"
-                  />
+                    style={inputStyle} placeholder="例：故郷の思い出"
+                    onFocus={(e) => e.target.style.borderColor = '#0D9488'}
+                    onBlur={(e) => e.target.style.borderColor = '#E2E8F0'} />
                   <MicButton onResult={(text) => setEditing({ ...editing, title: (editing.title || '') + text })} />
                 </div>
               </div>
@@ -243,78 +219,59 @@ export default function AlbumEditClient({ album, pages: initialPages, subject, a
               {/* 本文 */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-base font-medium">本文（最大200文字）</label>
-                  <button
-                    onClick={() => setShowAnswerPicker(true)}
-                    className="text-sm text-[#0D9488] hover:underline"
-                  >
+                  <label className="block text-sm font-medium" style={{ color: '#374151' }}>本文（最大200文字）</label>
+                  <button onClick={() => setShowAnswerPicker(true)}
+                    className="text-xs font-medium hover:underline" style={{ color: '#0D9488' }}>
                     📝 セッション回答から挿入
                   </button>
                 </div>
                 <div className="relative">
-                  <textarea
-                    value={editing.body_text || ''}
+                  <textarea value={editing.body_text || ''}
                     onChange={(e) => setEditing({ ...editing, body_text: e.target.value.slice(0, 200) })}
-                    rows={4}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-[#0D9488] resize-none pr-16"
+                    rows={4} style={{ ...inputStyle, resize: 'none', paddingRight: '3.5rem' }}
                     placeholder="思い出のエピソードを入力してください"
-                  />
-                  <MicButton
-                    onResult={(text) => setEditing({ ...editing, body_text: ((editing.body_text || '') + text).slice(0, 200) })}
-                    className="absolute bottom-3 right-3"
-                  />
+                    onFocus={(e) => e.target.style.borderColor = '#0D9488'}
+                    onBlur={(e) => e.target.style.borderColor = '#E2E8F0'} />
+                  <MicButton onResult={(text) => setEditing({ ...editing, body_text: ((editing.body_text || '') + text).slice(0, 200) })}
+                    className="absolute bottom-3 right-3" />
                 </div>
-                <p className="text-sm text-gray-400 text-right">{(editing.body_text || '').length}/200</p>
+                <p className="text-xs text-right mt-1" style={{ color: '#94A3B8' }}>{(editing.body_text || '').length}/200</p>
               </div>
 
-              {/* 写真アップロード */}
+              {/* 写真 */}
               {editing.template !== 'text_only' && (
                 <div>
-                  <label className="block text-base font-medium mb-2">写真を追加</label>
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>写真を追加</label>
                   {(editing.photo_urls?.length ?? 0) > 0 && (
                     <div className="flex gap-2 mb-3 flex-wrap">
                       {editing.photo_urls!.map((url, i) => (
                         <div key={i} className="relative">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={url} alt="" className="w-20 h-20 object-cover rounded-lg" />
-                          <button
-                            onClick={() => setEditing({
-                              ...editing,
-                              photo_urls: editing.photo_urls!.filter((_, idx) => idx !== i)
-                            })}
-                            className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs"
-                          >
-                            ×
-                          </button>
+                          <img src={url} alt="" className="w-20 h-20 object-cover rounded-xl" />
+                          <button onClick={() => setEditing({ ...editing, photo_urls: editing.photo_urls!.filter((_, idx) => idx !== i) })}
+                            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-xs text-white flex items-center justify-center"
+                            style={{ background: '#EF4444' }}>×</button>
                         </div>
                       ))}
                     </div>
                   )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-base"
-                  />
-                  {photoFile && (
-                    <p className="text-sm text-[#0D9488] mt-1">✓ {photoFile.name}</p>
-                  )}
+                  <input type="file" accept="image/*" onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
+                    className="w-full text-sm rounded-xl px-4 py-2.5" style={{ border: '1.5px solid #E2E8F0', color: '#64748B' }} />
+                  {photoFile && <p className="text-xs mt-1" style={{ color: '#0D9488' }}>✓ {photoFile.name}</p>}
                 </div>
               )}
 
-              {/* 保存ボタン */}
-              <button
-                onClick={() => savePage(editing)}
-                disabled={saving}
-                className="w-full h-14 bg-[#1B3A6B] text-white text-lg font-bold rounded-xl disabled:opacity-50 hover:bg-[#162d54] transition-colors"
-              >
+              {/* 保存 */}
+              <button onClick={() => savePage(editing)} disabled={saving}
+                className="w-full py-3.5 rounded-full text-base font-bold text-white disabled:opacity-50 hover:opacity-90"
+                style={{ background: '#1B3A6B' }}>
                 {saving ? '保存中...' : '保存する'}
               </button>
             </div>
           ) : (
-            <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center">
-              <div className="text-5xl mb-4">📄</div>
-              <p className="text-xl text-gray-500">
+            <div className="bg-white rounded-2xl p-12 text-center" style={{ border: '1px solid #E2E8F0' }}>
+              <div className="text-4xl mb-4">📄</div>
+              <p className="text-base" style={{ color: '#64748B' }}>
                 左のリストからページを選択するか、<br />「ページを追加」してください
               </p>
             </div>
@@ -325,27 +282,27 @@ export default function AlbumEditClient({ album, pages: initialPages, subject, a
       {/* 回答ピッカーモーダル */}
       {showAnswerPicker && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-[#1B3A6B]">セッション回答から挿入</h3>
-              <button onClick={() => setShowAnswerPicker(false)} className="text-gray-400 text-2xl">×</button>
+          <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-xl">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-xl font-bold" style={{ color: '#1B3A6B', fontFamily: 'serif' }}>セッション回答から挿入</h3>
+              <button onClick={() => setShowAnswerPicker(false)} className="text-2xl" style={{ color: '#94A3B8' }}>×</button>
             </div>
             <div className="space-y-3">
               {answers.filter((a) => a.answer_text).map((a) => (
-                <button
-                  key={a.id}
-                  onClick={() => applyAnswer(a.answer_text!)}
-                  className="w-full text-left p-4 border-2 border-gray-100 rounded-xl hover:border-[#0D9488] transition-colors"
-                >
-                  <p className="text-sm text-[#0D9488] font-medium mb-1">
+                <button key={a.id} onClick={() => applyAnswer(a.answer_text!)}
+                  className="w-full text-left p-4 rounded-xl transition-all hover:shadow-sm"
+                  style={{ border: '1.5px solid #E2E8F0' }}
+                  onMouseOver={(e) => (e.currentTarget.style.borderColor = '#0D9488')}
+                  onMouseOut={(e) => (e.currentTarget.style.borderColor = '#E2E8F0')}>
+                  <p className="text-xs font-semibold mb-1" style={{ color: '#0D9488' }}>
                     {a.sessions?.life_stage ? STAGE_LABELS[a.sessions.life_stage] : ''}
                   </p>
-                  <p className="text-base text-gray-600 font-medium">{a.question_text}</p>
-                  <p className="text-base text-[#1F2937] mt-1">{a.answer_text}</p>
+                  <p className="text-sm font-medium" style={{ color: '#374151' }}>{a.question_text}</p>
+                  <p className="text-sm mt-1" style={{ color: '#64748B' }}>{a.answer_text}</p>
                 </button>
               ))}
               {answers.filter((a) => a.answer_text).length === 0 && (
-                <p className="text-lg text-gray-400 text-center py-8">セッションの回答がまだありません</p>
+                <p className="text-base text-center py-8" style={{ color: '#94A3B8' }}>セッションの回答がまだありません</p>
               )}
             </div>
           </div>
