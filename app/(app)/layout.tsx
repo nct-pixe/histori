@@ -20,37 +20,43 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
-      <header className="bg-[#1B3A6B] text-white shadow-md">
-        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/dashboard" className="text-2xl font-bold tracking-tight">
+    <div className="min-h-screen" style={{ background: '#F0F4F8' }}>
+      <header style={{ background: 'white', borderBottom: '1px solid #E2E8F0' }} className="shadow-sm">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <Link href="/dashboard" className="text-2xl font-bold tracking-tight" style={{ color: '#0D9488' }}>
             histori.
           </Link>
-          <nav className="flex items-center gap-6">
-            <Link href="/dashboard" className="text-lg hover:text-teal-200 transition-colors">
-              ホーム
-            </Link>
-            <Link href="/session" className="text-lg hover:text-teal-200 transition-colors">
-              セッション
-            </Link>
-            <Link href="/album" className="text-lg hover:text-teal-200 transition-colors">
-              アルバム
-            </Link>
-            <Link href="/music" className="text-lg hover:text-teal-200 transition-colors">
-              音楽
-            </Link>
-            <Link href="/video" className="text-lg hover:text-teal-200 transition-colors">
-              動画
-            </Link>
+          <nav className="flex items-center gap-2">
+            {[
+              { href: '/dashboard', label: 'ダッシュボード' },
+              { href: '/setup', label: '対象者登録' },
+              { href: '/session', label: 'セッション' },
+              { href: '/album', label: 'アルバム' },
+              { href: '/music', label: '音楽' },
+              { href: '/video', label: '動画' },
+            ].map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className="px-4 py-2 rounded-full text-base font-medium transition-colors hover:bg-teal-50"
+                style={{ color: '#1B3A6B' }}
+              >
+                {label}
+              </Link>
+            ))}
             <form action={signOut}>
-              <button type="submit" className="text-lg text-teal-200 hover:text-white transition-colors">
+              <button
+                type="submit"
+                className="ml-2 px-4 py-2 rounded-full text-base font-medium transition-colors"
+                style={{ color: '#64748B' }}
+              >
                 ログアウト
               </button>
             </form>
           </nav>
         </div>
       </header>
-      <main className="max-w-5xl mx-auto px-4 py-8">{children}</main>
+      <main className="max-w-6xl mx-auto px-6 py-8">{children}</main>
     </div>
   )
 }

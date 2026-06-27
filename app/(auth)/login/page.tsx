@@ -4,7 +4,6 @@ export const dynamic = 'force-dynamic'
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 export default function LoginPage() {
@@ -12,7 +11,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
   const supabase = createClient()
 
   async function handleLogin(e: React.FormEvent) {
@@ -29,65 +27,99 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold text-[#1B3A6B] tracking-tight">histori.</h1>
-          <p className="mt-2 text-xl text-gray-500">大切な人の記憶を、物語に。</p>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-lg p-8">
-          <h2 className="text-2xl font-bold text-[#1F2937] mb-6">ログイン</h2>
-
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 mb-6 text-lg">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div>
-              <label className="block text-lg font-medium text-[#1F2937] mb-2">
-                メールアドレス
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-xl focus:outline-none focus:border-[#0D9488]"
-                placeholder="example@email.com"
-              />
-            </div>
-            <div>
-              <label className="block text-lg font-medium text-[#1F2937] mb-2">
-                パスワード
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-xl focus:outline-none focus:border-[#0D9488]"
-                placeholder="••••••••"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-16 bg-[#1B3A6B] text-white text-xl font-bold rounded-xl hover:bg-[#162d54] disabled:opacity-50 transition-colors"
-            >
-              {loading ? 'ログイン中...' : 'ログイン'}
-            </button>
-          </form>
-
-          <p className="mt-6 text-center text-lg text-gray-500">
-            アカウントをお持ちでない方は{' '}
-            <Link href="/signup" className="text-[#0D9488] font-medium hover:underline">
-              新規登録
-            </Link>
+    <div className="min-h-screen flex" style={{ background: '#F0F4F8' }}>
+      {/* 左：ビジュアル */}
+      <div
+        className="hidden lg:flex flex-1 flex-col justify-center px-16"
+        style={{ background: 'linear-gradient(135deg, #1B3A6B 0%, #0D9488 100%)' }}
+      >
+        <div className="text-white">
+          <h1 className="text-5xl font-bold mb-4 leading-tight" style={{ fontFamily: 'serif' }}>
+            histori.
+          </h1>
+          <p className="text-2xl font-light mb-6 leading-relaxed opacity-90">
+            写真・音楽・動画で、<br />
+            あなたの人生を<br />
+            もう一度ひらく。
           </p>
+          <p className="text-base opacity-70">
+            大切な思い出を、未来の家族へ。<br />
+            認知症ケアのためのデジタル回想法プラットフォーム
+          </p>
+        </div>
+      </div>
+
+      {/* 右：ログインフォーム */}
+      <div className="flex-1 flex items-center justify-center px-8">
+        <div className="w-full max-w-md">
+          {/* モバイル用ロゴ */}
+          <div className="lg:hidden text-center mb-10">
+            <h1 className="text-4xl font-bold" style={{ color: '#0D9488', fontFamily: 'serif' }}>histori.</h1>
+            <p className="mt-2 text-base" style={{ color: '#64748B' }}>大切な人の記憶を、物語に。</p>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm p-8" style={{ border: '1px solid #E2E8F0' }}>
+            <h2 className="text-2xl font-bold mb-2" style={{ color: '#1B3A6B', fontFamily: 'serif' }}>ログイン</h2>
+            <p className="text-sm mb-6" style={{ color: '#64748B' }}>アカウントにサインインしてください</p>
+
+            {error && (
+              <div className="rounded-xl p-4 mb-6 text-sm" style={{ background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }}>
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
+                  メールアドレス
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full rounded-xl px-4 py-3 text-base outline-none transition-all"
+                  style={{ border: '1.5px solid #E2E8F0', color: '#1F2937' }}
+                  onFocus={(e) => e.target.style.borderColor = '#0D9488'}
+                  onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
+                  placeholder="example@email.com"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>
+                  パスワード
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="w-full rounded-xl px-4 py-3 text-base outline-none transition-all"
+                  style={{ border: '1.5px solid #E2E8F0', color: '#1F2937' }}
+                  onFocus={(e) => e.target.style.borderColor = '#0D9488'}
+                  onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
+                  placeholder="••••••••"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3.5 rounded-xl text-base font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                style={{ background: '#1B3A6B' }}
+              >
+                {loading ? 'ログイン中...' : 'ログイン'}
+              </button>
+            </form>
+
+            <div className="mt-6 pt-6 text-center" style={{ borderTop: '1px solid #F1F5F9' }}>
+              <p className="text-sm" style={{ color: '#64748B' }}>
+                アカウントをお持ちでない方は{' '}
+                <Link href="/signup" className="font-semibold hover:underline" style={{ color: '#0D9488' }}>
+                  新規登録
+                </Link>
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
