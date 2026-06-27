@@ -292,7 +292,6 @@ function StepConsent({ checked, onCheck, onNext, onBack, loading }: {
           <p>【本社】〒526-0834 滋賀県長浜市大辰巳町36番地1階</p>
           <p>【東京オフィス】〒107-0062 東京都港区南青山3-1-36 6F</p>
           <p>【仙台オフィス】〒984-0053 宮城県仙台市若林区連坊小路127 2F</p>
-          <p>個人情報取扱責任者：野地 数正</p>
           <p>お問い合わせ：info@nct-net.com</p>
         </div>
       </div>
