@@ -56,10 +56,12 @@ export default function SetupPage() {
     try {
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       if (authError || !user) {
-        // セッション切れ → ログインへリダイレクト
         window.location.href = '/login'
         return
       }
+
+      // profilesレコードがなければ自動作成
+      await supabase.from('profiles').upsert({ id: user.id, mode: 'family' }, { onConflict: 'id' })
 
       const { data, error } = await supabase.from('subjects').insert({
         user_id: user.id,
