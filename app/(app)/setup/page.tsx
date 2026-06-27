@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import type { CareLevel, SessionGoal } from '@/lib/supabase/types'
+import MicButton from '@/components/MicButton'
 
 type Step = 'name' | 'profile' | 'careLevel' | 'goal' | 'consent' | 'done'
 
@@ -132,13 +133,16 @@ function StepName({ form, update, onNext }: {
       <h2 className="text-2xl font-bold text-[#1F2937]">主人公のお名前</h2>
       <div>
         <label className="block text-lg font-medium mb-2">お名前（フルネーム）</label>
-        <input
-          type="text"
-          value={form.name}
-          onChange={(e) => update('name', e.target.value)}
-          className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-xl focus:outline-none focus:border-[#0D9488]"
-          placeholder="例：田中 花子"
-        />
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={form.name}
+            onChange={(e) => update('name', e.target.value)}
+            className="flex-1 border-2 border-gray-200 rounded-xl px-4 py-3 text-xl focus:outline-none focus:border-[#0D9488]"
+            placeholder="例：田中 花子"
+          />
+          <MicButton onResult={(text) => update('name', form.name + text)} />
+        </div>
       </div>
       <button
         onClick={onNext}
@@ -167,13 +171,18 @@ function StepProfile({ form, update, onNext, onBack }: {
       ].map(({ field, label, placeholder, type }) => (
         <div key={field}>
           <label className="block text-lg font-medium mb-1">{label}</label>
-          <input
-            type={type || 'text'}
-            value={form[field] as string}
-            onChange={(e) => update(field, e.target.value)}
-            className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-[#0D9488]"
-            placeholder={placeholder}
-          />
+          <div className="flex gap-2">
+            <input
+              type={type || 'text'}
+              value={form[field] as string}
+              onChange={(e) => update(field, e.target.value)}
+              className="flex-1 border-2 border-gray-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-[#0D9488]"
+              placeholder={placeholder}
+            />
+            {type !== 'number' && (
+              <MicButton onResult={(text) => update(field, (form[field] as string) + text)} />
+            )}
+          </div>
         </div>
       ))}
       <div className="flex gap-3 pt-2">

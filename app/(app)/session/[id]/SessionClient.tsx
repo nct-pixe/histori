@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import type { Subject, LifeStage } from '@/lib/supabase/types'
 import type { Question } from '@/lib/questions/bank'
+import MicButton from '@/components/MicButton'
 
 interface Props {
   subject: Subject
@@ -157,13 +158,19 @@ export default function SessionClient({ subject, stageLabel, questions, sessionI
 
       {/* 回答入力（通常モードのみ） */}
       {!sharedMode && (
-        <textarea
-          value={answers[currentQ?.id] || ''}
-          onChange={(e) => setAnswers((prev) => ({ ...prev, [currentQ.id]: e.target.value }))}
-          className="w-full border-2 border-gray-200 rounded-2xl px-5 py-4 text-xl focus:outline-none focus:border-[#0D9488] resize-none mb-6"
-          rows={4}
-          placeholder="回答・メモを入力してください（省略可）"
-        />
+        <div className="relative mb-6">
+          <textarea
+            value={answers[currentQ?.id] || ''}
+            onChange={(e) => setAnswers((prev) => ({ ...prev, [currentQ.id]: e.target.value }))}
+            className="w-full border-2 border-gray-200 rounded-2xl px-5 py-4 text-xl focus:outline-none focus:border-[#0D9488] resize-none pr-16"
+            rows={4}
+            placeholder="回答・メモを入力してください（省略可）"
+          />
+          <MicButton
+            onResult={(text) => setAnswers((prev) => ({ ...prev, [currentQ.id]: (prev[currentQ.id] || '') + text }))}
+            className="absolute bottom-3 right-3"
+          />
+        </div>
       )}
 
       {/* ナビゲーション */}

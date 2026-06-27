@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import MicButton from '@/components/MicButton'
 import type { Album, AlbumPage, Subject } from '@/lib/supabase/types'
 import Link from 'next/link'
 
@@ -227,13 +228,16 @@ export default function AlbumEditClient({ album, pages: initialPages, subject, a
               {/* タイトル */}
               <div>
                 <label className="block text-base font-medium mb-2">ページタイトル</label>
-                <input
-                  type="text"
-                  value={editing.title || ''}
-                  onChange={(e) => setEditing({ ...editing, title: e.target.value })}
-                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-[#0D9488]"
-                  placeholder="例：故郷の思い出"
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={editing.title || ''}
+                    onChange={(e) => setEditing({ ...editing, title: e.target.value })}
+                    className="flex-1 border-2 border-gray-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-[#0D9488]"
+                    placeholder="例：故郷の思い出"
+                  />
+                  <MicButton onResult={(text) => setEditing({ ...editing, title: (editing.title || '') + text })} />
+                </div>
               </div>
 
               {/* 本文 */}
@@ -247,13 +251,19 @@ export default function AlbumEditClient({ album, pages: initialPages, subject, a
                     📝 セッション回答から挿入
                   </button>
                 </div>
-                <textarea
-                  value={editing.body_text || ''}
-                  onChange={(e) => setEditing({ ...editing, body_text: e.target.value.slice(0, 200) })}
-                  rows={4}
-                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-[#0D9488] resize-none"
-                  placeholder="思い出のエピソードを入力してください"
-                />
+                <div className="relative">
+                  <textarea
+                    value={editing.body_text || ''}
+                    onChange={(e) => setEditing({ ...editing, body_text: e.target.value.slice(0, 200) })}
+                    rows={4}
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-[#0D9488] resize-none pr-16"
+                    placeholder="思い出のエピソードを入力してください"
+                  />
+                  <MicButton
+                    onResult={(text) => setEditing({ ...editing, body_text: ((editing.body_text || '') + text).slice(0, 200) })}
+                    className="absolute bottom-3 right-3"
+                  />
+                </div>
                 <p className="text-sm text-gray-400 text-right">{(editing.body_text || '').length}/200</p>
               </div>
 
