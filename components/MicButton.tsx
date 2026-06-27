@@ -10,7 +10,7 @@ interface Props {
 export default function MicButton({ onResult, className = '' }: Props) {
   const [listening, setListening] = useState(false)
   const [supported, setSupported] = useState(false)
-  const recognitionRef = useRef<SpeechRecognition | null>(null)
+  const recognitionRef = useRef<any>(null)
 
   useEffect(() => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
