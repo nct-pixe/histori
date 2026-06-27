@@ -27,12 +27,12 @@ export default function MicButton({ onResult, className = '' }: Props) {
       return
     }
 
-    const recognition: SpeechRecognition = new SR()
+    const recognition: any = new SR()
     recognition.lang = 'ja-JP'
     recognition.continuous = false
     recognition.interimResults = false
 
-    recognition.onresult = (e: SpeechRecognitionEvent) => {
+    recognition.onresult = (e: any) => {
       const text = e.results[0][0].transcript
       onResult(text)
     }
