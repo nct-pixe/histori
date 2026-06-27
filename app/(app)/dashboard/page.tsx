@@ -52,13 +52,11 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      {(debugError || debugUserId) && (
-        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-sm text-gray-700">
-          <p>ユーザーID: {debugUserId ?? '未ログイン'}</p>
-          {debugError && <p className="text-red-600">エラー: {debugError}</p>}
-          <p>取得件数: {subjects?.length ?? 0}件</p>
-        </div>
-      )}
+      <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-sm text-gray-700">
+        <p>ユーザーID: {debugUserId ?? '未ログイン（サーバー側セッションなし）'}</p>
+        {debugError && <p className="text-red-600">エラー: {debugError}</p>}
+        <p>取得件数: {subjects?.length ?? 0}件</p>
+      </div>
 
       {subjects && subjects.length > 0 ? (
         <div className="grid gap-5 md:grid-cols-2">

@@ -39,6 +39,7 @@ export default function SetupPage() {
   const [form, setForm] = useState<FormData>(initialForm)
   const [consentChecked, setConsentChecked] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [submitError, setSubmitError] = useState('')
   const router = useRouter()
   const supabase = createClient()
 
@@ -51,12 +52,17 @@ export default function SetupPage() {
 
   async function handleSubmit() {
     setLoading(true)
+    setSubmitError('')
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      const userId = user?.id ?? 'local-dev-user'
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (authError || !user) {
+        setSubmitError(`認証エラー: ${authError?.message ?? 'ログインが必要です'}`)
+        setLoading(false)
+        return
+      }
 
       const { data, error } = await supabase.from('subjects').insert({
-        user_id: userId,
+        user_id: user.id,
         name: form.name,
         birth_year: form.birth_year ? parseInt(form.birth_year) : null,
         birth_region: form.birth_region || null,
@@ -69,14 +75,16 @@ export default function SetupPage() {
         consent_agreed_at: consentChecked ? new Date().toISOString() : null,
       }).select().single()
 
-      if (!error && data) {
-        setStep('done')
-      } else {
-        // Supabase未接続時はそのまま完了へ
+      if (error) {
+        setSubmitError(`登録エラー: ${error.message}`)
+        setLoading(false)
+        return
+      }
+      if (data) {
         setStep('done')
       }
-    } catch {
-      setStep('done')
+    } catch (e: any) {
+      setSubmitError(`予期しないエラー: ${e?.message ?? '不明'}`)
     }
     setLoading(false)
   }
@@ -117,6 +125,7 @@ export default function SetupPage() {
             onNext={handleSubmit}
             onBack={() => setStep('goal')}
             loading={loading}
+            error={submitError}
           />
         )}
         {step === 'done' && <StepDone name={form.name} router={router} />}
@@ -274,12 +283,17 @@ function StepGoal({ form, update, onNext, onBack }: {
   )
 }
 
-function StepConsent({ checked, onCheck, onNext, onBack, loading }: {
-  checked: boolean; onCheck: (v: boolean) => void; onNext: () => void; onBack: () => void; loading: boolean
+function StepConsent({ checked, onCheck, onNext, onBack, loading, error }: {
+  checked: boolean; onCheck: (v: boolean) => void; onNext: () => void; onBack: () => void; loading: boolean; error?: string
 }) {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-[#1F2937]">同意書の確認</h2>
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-base">
+          {error}
+        </div>
+      )}
       <div className="bg-gray-50 rounded-xl p-5 text-base text-gray-700 space-y-3 max-h-64 overflow-y-auto">
         <p className="font-bold">個人情報の取り扱いについて</p>
         <p>本アプリに入力された個人情報・回想内容は、回想法セッションの実施およびアルバム作成のみを目的として使用します。</p>
