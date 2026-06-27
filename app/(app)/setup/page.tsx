@@ -56,8 +56,8 @@ export default function SetupPage() {
     try {
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       if (authError || !user) {
-        setSubmitError(`認証エラー: ${authError?.message ?? 'ログインが必要です'}`)
-        setLoading(false)
+        // セッション切れ → ログインへリダイレクト
+        window.location.href = '/login'
         return
       }
 

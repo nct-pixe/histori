@@ -6,6 +6,12 @@ import Link from 'next/link'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
 
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    redirect('/login')
+  }
+
   async function signOut() {
     'use server'
     const supabase = await createClient()
