@@ -24,7 +24,7 @@ export default function LoginPage() {
       setError('メールアドレスまたはパスワードが正しくありません')
       setLoading(false)
     } else {
-      router.push('/dashboard')
+      window.location.href = '/dashboard'
     }
   }
 
