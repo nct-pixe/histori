@@ -283,9 +283,18 @@ function StepConsent({ checked, onCheck, onNext, onBack, loading }: {
       <div className="bg-gray-50 rounded-xl p-5 text-base text-gray-700 space-y-3 max-h-64 overflow-y-auto">
         <p className="font-bold">個人情報の取り扱いについて</p>
         <p>本アプリに入力された個人情報・回想内容は、回想法セッションの実施およびアルバム作成のみを目的として使用します。</p>
-        <p>データはSupabase（クラウドデータベース）に暗号化して保存されます。第三者への提供は行いません。</p>
+        <p>データはSupabase（クラウドデータベース・米国サーバー）に暗号化して保存されます。第三者への提供は行いません。</p>
         <p>データの削除はいつでも設定画面から行うことができます。</p>
         <p>回想法セッションは、認知症の治療を目的とするものではなく、生活の質の向上を目的とした非薬物的アプローチです。</p>
+        <div className="border-t border-gray-200 pt-3 mt-3">
+          <p className="font-bold">運営者情報</p>
+          <p>会社名：NEURO CARE TECH株式会社</p>
+          <p>【本社】〒526-0834 滋賀県長浜市大辰巳町36番地1階</p>
+          <p>【東京オフィス】〒107-0062 東京都港区南青山3-1-36 6F</p>
+          <p>【仙台オフィス】〒984-0053 宮城県仙台市若林区連坊小路127 2F</p>
+          <p>個人情報取扱責任者：野地 数正</p>
+          <p>お問い合わせ：info@nct-net.com</p>
+        </div>
       </div>
       <label className="flex items-start gap-3 cursor-pointer">
         <input
