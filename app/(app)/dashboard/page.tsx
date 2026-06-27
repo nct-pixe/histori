@@ -6,13 +6,19 @@ export default async function DashboardPage() {
   let subjects: Subject[] | null = null
   let sessions: { subject_id: string }[] | null = null
   let albums: { subject_id: string }[] | null = null
+  let debugError: string | null = null
+  let debugUserId: string | null = null
 
   try {
     const supabase = await createClient()
-    const { data: subjectsData } = await supabase
+    const { data: { user } } = await supabase.auth.getUser()
+    debugUserId = user?.id ?? null
+
+    const { data: subjectsData, error: subjectsError } = await supabase
       .from('subjects')
       .select('*')
       .order('created_at', { ascending: false })
+    if (subjectsError) debugError = subjectsError.message
     subjects = subjectsData
 
     const subjectIds = (subjects as Subject[] | null)?.map((s) => s.id) ?? []
@@ -24,8 +30,8 @@ export default async function DashboardPage() {
       sessions = sessionsData
       albums = albumsData
     }
-  } catch {
-    // Supabase未接続時はデータなしで表示
+  } catch (e: any) {
+    debugError = e?.message ?? 'unknown error'
   }
 
   const sessionCount = (id: string) => sessions?.filter((s: { subject_id: string }) => s.subject_id === id).length ?? 0
@@ -45,6 +51,14 @@ export default async function DashboardPage() {
           ＋ 主人公を登録
         </Link>
       </div>
+
+      {(debugError || debugUserId) && (
+        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-sm text-gray-700">
+          <p>ユーザーID: {debugUserId ?? '未ログイン'}</p>
+          {debugError && <p className="text-red-600">エラー: {debugError}</p>}
+          <p>取得件数: {subjects?.length ?? 0}件</p>
+        </div>
+      )}
 
       {subjects && subjects.length > 0 ? (
         <div className="grid gap-5 md:grid-cols-2">
