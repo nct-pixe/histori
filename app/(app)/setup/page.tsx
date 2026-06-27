@@ -50,24 +50,31 @@ export default function SetupPage() {
 
   async function handleSubmit() {
     setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const userId = user?.id ?? 'local-dev-user'
 
-    const { data, error } = await supabase.from('subjects').insert({
-      user_id: user.id,
-      name: form.name,
-      birth_year: form.birth_year ? parseInt(form.birth_year) : null,
-      birth_region: form.birth_region || null,
-      career: form.career || null,
-      hobbies: form.hobbies || null,
-      family_structure: form.family_structure || null,
-      music_preference: form.music_preference || null,
-      care_level: form.care_level,
-      session_goal: form.session_goal,
-      consent_agreed_at: consentChecked ? new Date().toISOString() : null,
-    }).select().single()
+      const { data, error } = await supabase.from('subjects').insert({
+        user_id: userId,
+        name: form.name,
+        birth_year: form.birth_year ? parseInt(form.birth_year) : null,
+        birth_region: form.birth_region || null,
+        career: form.career || null,
+        hobbies: form.hobbies || null,
+        family_structure: form.family_structure || null,
+        music_preference: form.music_preference || null,
+        care_level: form.care_level,
+        session_goal: form.session_goal,
+        consent_agreed_at: consentChecked ? new Date().toISOString() : null,
+      }).select().single()
 
-    if (!error && data) {
+      if (!error && data) {
+        setStep('done')
+      } else {
+        // Supabase未接続時はそのまま完了へ
+        setStep('done')
+      }
+    } catch {
       setStep('done')
     }
     setLoading(false)

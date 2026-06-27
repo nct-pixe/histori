@@ -3,21 +3,33 @@ import Link from 'next/link'
 import type { Subject } from '@/lib/supabase/types'
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
-  const { data: subjects } = await supabase
-    .from('subjects')
-    .select('*')
-    .order('created_at', { ascending: false })
+  let subjects: Subject[] | null = null
+  let sessions: { subject_id: string }[] | null = null
+  let albums: { subject_id: string }[] | null = null
 
-  // 各主人公のセッション数・アルバム数を取得
-  const subjectIds = (subjects as Subject[] | null)?.map((s) => s.id) ?? []
-  const [{ data: sessions }, { data: albums }] = await Promise.all([
-    supabase.from('sessions').select('subject_id').in('subject_id', subjectIds),
-    supabase.from('albums').select('subject_id').in('subject_id', subjectIds),
-  ])
+  try {
+    const supabase = await createClient()
+    const { data: subjectsData } = await supabase
+      .from('subjects')
+      .select('*')
+      .order('created_at', { ascending: false })
+    subjects = subjectsData
 
-  const sessionCount = (id: string) => sessions?.filter((s) => s.subject_id === id).length ?? 0
-  const albumCount = (id: string) => albums?.filter((a) => a.subject_id === id).length ?? 0
+    const subjectIds = (subjects as Subject[] | null)?.map((s) => s.id) ?? []
+    if (subjectIds.length > 0) {
+      const [{ data: sessionsData }, { data: albumsData }] = await Promise.all([
+        supabase.from('sessions').select('subject_id').in('subject_id', subjectIds),
+        supabase.from('albums').select('subject_id').in('subject_id', subjectIds),
+      ])
+      sessions = sessionsData
+      albums = albumsData
+    }
+  } catch {
+    // Supabase未接続時はデータなしで表示
+  }
+
+  const sessionCount = (id: string) => sessions?.filter((s: { subject_id: string }) => s.subject_id === id).length ?? 0
+  const albumCount = (id: string) => albums?.filter((a: { subject_id: string }) => a.subject_id === id).length ?? 0
 
   return (
     <div>

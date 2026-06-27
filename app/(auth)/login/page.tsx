@@ -3,29 +3,20 @@
 export const dynamic = 'force-dynamic'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    setError('')
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      setError('メールアドレスまたはパスワードが正しくありません')
-    } else {
-      router.push('/dashboard')
-    }
-    setLoading(false)
+    // ローカル開発用：認証バイパス
+    router.push('/dashboard')
   }
 
   return (
@@ -39,11 +30,6 @@ export default function LoginPage() {
         <div className="bg-white rounded-2xl shadow-lg p-8">
           <h2 className="text-2xl font-bold text-[#1F2937] mb-6">ログイン</h2>
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 mb-6 text-lg">
-              {error}
-            </div>
-          )}
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>

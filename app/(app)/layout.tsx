@@ -5,10 +5,17 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  // ローカル開発用：認証バイパス（Supabase未接続時）
+  let isAuthed = false
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    isAuthed = !!user
+  } catch {}
 
-  if (!user) redirect('/login')
+  if (!isAuthed && process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://placeholder.supabase.co') {
+    redirect('/login')
+  }
 
   async function signOut() {
     'use server'
