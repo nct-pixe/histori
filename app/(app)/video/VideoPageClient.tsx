@@ -17,12 +17,17 @@ export default function VideoPageClient({ subjects, selectedSubject, videoFiles 
   const [activeVideo, setActiveVideo] = useState<VideoFile | null>(null)
   const [timeLeft, setTimeLeft] = useState(SESSION_MINUTES * 60)
   const [sessionActive, setSessionActive] = useState(false)
-  const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [youtubeUrl, setYoutubeUrl] = useState('')
   const [uploadTitle, setUploadTitle] = useState('')
   const [uploading, setUploading] = useState(false)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const supabase = createClient()
+
+  function extractYoutubeId(url: string): string | null {
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)
+    return match ? match[1] : null
+  }
 
   useEffect(() => {
     if (sessionActive) {
@@ -61,23 +66,20 @@ export default function VideoPageClient({ subjects, selectedSubject, videoFiles 
     await supabase.from('video_files').update({ reaction_log: newLog }).eq('id', activeVideo.id)
   }
 
-  async function handleUpload() {
-    if (!uploadFile || !selectedSubject) return
+  async function handleAddYoutube() {
+    if (!youtubeUrl || !selectedSubject) return
+    const videoId = extractYoutubeId(youtubeUrl)
+    if (!videoId) { alert('正しいYouTubeのURLを入力してください'); return }
     setUploading(true)
-    const path = `video/${selectedSubject.id}/${Date.now()}_${uploadFile.name}`
-    const { data, error } = await supabase.storage.from('media').upload(path, uploadFile)
-    if (!error && data) {
-      const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(path)
-      await supabase.from('video_files').insert({
-        subject_id: selectedSubject.id,
-        title: uploadTitle || uploadFile.name,
-        file_url: publicUrl,
-      })
-      setUploadFile(null)
-      setUploadTitle('')
-      window.location.reload()
-    }
+    await supabase.from('video_files').insert({
+      subject_id: selectedSubject.id,
+      title: uploadTitle || 'YouTube動画',
+      file_url: `https://www.youtube.com/embed/${videoId}`,
+    })
+    setYoutubeUrl('')
+    setUploadTitle('')
     setUploading(false)
+    window.location.reload()
   }
 
   const isAlert = timeLeft <= 300 && timeLeft > 0 && sessionActive
@@ -113,12 +115,15 @@ export default function VideoPageClient({ subjects, selectedSubject, videoFiles 
           </div>
 
           <div className="bg-black rounded-xl overflow-hidden mb-4">
-            <video
-              ref={videoRef}
-              src={activeVideo.file_url}
-              controls
-              className="w-full max-h-72"
-            />
+            {activeVideo.file_url.includes('youtube.com/embed') ? (
+              <iframe
+                src={activeVideo.file_url}
+                className="w-full aspect-video"
+                allowFullScreen
+              />
+            ) : (
+              <video ref={videoRef} src={activeVideo.file_url} controls className="w-full max-h-72" />
+            )}
           </div>
           <p className="text-xl font-bold mb-4">{activeVideo.title}</p>
 
@@ -164,23 +169,23 @@ export default function VideoPageClient({ subjects, selectedSubject, videoFiles 
         <p className="text-lg text-gray-500 mb-6">まだ動画がありません</p>
       )}
 
-      {/* アップロード */}
+      {/* YouTube追加 */}
       {selectedSubject && (
         <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
-          <h3 className="text-xl font-bold text-[#1F2937]">動画をアップロード</h3>
-          <p className="text-base text-gray-500">MP4・MOV 形式に対応</p>
+          <h3 className="text-xl font-bold text-[#1F2937]">YouTube動画を追加</h3>
+          <p className="text-base text-gray-500">YouTubeのURLを貼り付けてください</p>
           <input type="text" value={uploadTitle} onChange={(e) => setUploadTitle(e.target.value)}
             className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-[#0D9488]"
             placeholder="動画のタイトル" />
-          <input type="file" accept="video/*"
-            onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-            className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-lg" />
+          <input type="url" value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)}
+            className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-[#0D9488]"
+            placeholder="https://www.youtube.com/watch?v=..." />
           <button
-            onClick={handleUpload}
-            disabled={!uploadFile || uploading}
+            onClick={handleAddYoutube}
+            disabled={!youtubeUrl || uploading}
             className="w-full h-14 bg-[#D97706] text-white text-lg font-bold rounded-xl disabled:opacity-50 hover:bg-amber-600"
           >
-            {uploading ? 'アップロード中...' : 'アップロード'}
+            {uploading ? '追加中...' : '動画を追加'}
           </button>
         </div>
       )}

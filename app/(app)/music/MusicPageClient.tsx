@@ -56,13 +56,19 @@ export default function MusicPageClient({ subjects, selectedSubject, musicFiles 
     await supabase.from('music_files').update({ reaction_score: currentScore + 1 }).eq('id', fileId)
   }
 
+  const MAX_MUSIC_FILES = 5
+
   async function handleUpload() {
     if (!uploadFile || !selectedSubject) return
+    if (musicFiles.length >= MAX_MUSIC_FILES) {
+      alert(`楽曲は最大${MAX_MUSIC_FILES}曲までです`)
+      return
+    }
     setUploading(true)
     const path = `music/${selectedSubject.id}/${Date.now()}_${uploadFile.name}`
-    const { data, error } = await supabase.storage.from('media').upload(path, uploadFile)
+    const { data, error } = await supabase.storage.from('music-files').upload(path, uploadFile)
     if (!error && data) {
-      const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(path)
+      const { data: { publicUrl } } = supabase.storage.from('music-files').getPublicUrl(path)
       await supabase.from('music_files').insert({
         subject_id: selectedSubject.id,
         title: uploadTitle || uploadFile.name,
@@ -177,7 +183,15 @@ export default function MusicPageClient({ subjects, selectedSubject, musicFiles 
 
           {/* アップロードフォーム */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-[#1F2937]">楽曲をアップロード</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold text-[#1F2937]">楽曲をアップロード</h3>
+              <span className={`text-base font-medium ${musicFiles.length >= 5 ? 'text-red-500' : 'text-gray-500'}`}>
+                {musicFiles.length} / 5曲
+              </span>
+            </div>
+            {musicFiles.length >= 5 && (
+              <p className="text-red-500 text-base">楽曲は最大5曲までです。削除してから追加してください。</p>
+            )}
             <input type="text" value={uploadTitle} onChange={(e) => setUploadTitle(e.target.value)}
               className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-[#0D9488]"
               placeholder="曲名（省略するとファイル名になります）" />
@@ -189,7 +203,7 @@ export default function MusicPageClient({ subjects, selectedSubject, musicFiles 
               className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-lg" />
             <button
               onClick={handleUpload}
-              disabled={!uploadFile || uploading}
+              disabled={!uploadFile || uploading || musicFiles.length >= 5}
               className="w-full h-14 bg-[#0D9488] text-white text-lg font-bold rounded-xl disabled:opacity-50 hover:bg-teal-700"
             >
               {uploading ? 'アップロード中...' : 'アップロード'}
