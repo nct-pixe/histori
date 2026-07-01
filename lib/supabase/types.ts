@@ -66,6 +66,7 @@ export interface AlbumPage {
   title?: string
   body_text?: string
   photo_urls?: string[]
+  photo_caption?: string
   music_url?: string
   video_url?: string
   life_stage?: string

@@ -62,10 +62,14 @@ export default function AlbumEditClient({ album, pages: initialPages, subject, a
     let photoUrls = page.photo_urls || []
     if (photoFile) {
       const path = `photos/${album.subject_id}/${Date.now()}_${photoFile.name}`
-      const { data: uploadData } = await supabase.storage.from('album-photos').upload(path, photoFile)
-      if (uploadData) {
-        const { data: { publicUrl } } = supabase.storage.from('album-photos').getPublicUrl(path)
-        photoUrls = [...photoUrls, publicUrl]
+      const uploadForm = new FormData()
+      uploadForm.append('file', photoFile)
+      uploadForm.append('bucket', 'album-photos')
+      uploadForm.append('path', path)
+      const res = await fetch('/api/upload', { method: 'POST', body: uploadForm })
+      if (res.ok) {
+        const { url } = await res.json()
+        photoUrls = [...photoUrls, url]
       }
       setPhotoFile(null)
     }
@@ -278,6 +282,17 @@ export default function AlbumEditClient({ album, pages: initialPages, subject, a
                   <input type="file" accept="image/*" onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
                     className="w-full text-sm rounded-xl px-4 py-2.5" style={{ border: '1.5px solid #E2E8F0', color: '#64748B' }} />
                   {photoFile && <p className="text-xs mt-1" style={{ color: '#0D9488' }}>✓ {photoFile.name}</p>}
+                </div>
+              )}
+
+              {/* 写真キャプション */}
+              {editing.template !== 'text_only' && (editing.photo_urls?.length ?? 0) > 0 && (
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>写真のキャプション</label>
+                  <input type="text" value={editing.photo_caption || ''}
+                    onChange={(e) => setEditing({ ...editing, photo_caption: e.target.value.slice(0, 60) })}
+                    placeholder="例：自宅、家族旅行にて"
+                    style={inputStyle} />
                 </div>
               )}
 
