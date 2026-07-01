@@ -96,18 +96,34 @@ const s = StyleSheet.create({
     lineHeight: 1.8,
     color: '#1F2937',
   },
+  photoFrame: {
+    width: 228,
+    height: 228,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 6,
+    padding: 6,
+  },
   photo: {
-    width: 220,
-    height: 220,
+    width: '100%',
+    height: '100%',
     objectFit: 'cover',
-    borderRadius: 4,
+    borderRadius: 2,
+  },
+  photoLargeFrame: {
+    width: '100%',
+    height: 292,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 6,
+    padding: 6,
+    marginBottom: 12,
   },
   photoLarge: {
     width: '100%',
-    height: 280,
+    height: '100%',
     objectFit: 'cover',
-    borderRadius: 4,
-    marginBottom: 12,
+    borderRadius: 2,
   },
   photoGrid: {
     flexDirection: 'row',
@@ -115,11 +131,29 @@ const s = StyleSheet.create({
     gap: 8,
     marginBottom: 12,
   },
+  photoGridFrame: {
+    width: 228,
+    height: 228,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 6,
+    padding: 6,
+  },
+  photoGridFrameSingle: {
+    width: '100%',
+    height: 292,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 6,
+    padding: 6,
+  },
   photoGridItem: {
-    width: 220,
-    height: 220,
+    width: '100%',
+    height: '100%',
     objectFit: 'cover',
-    borderRadius: 4,
+    borderRadius: 2,
   },
   footer: {
     flexDirection: 'row',
@@ -174,16 +208,34 @@ export function SinglePagePDF({ page, album, subject }: SinglePageProps) {
           </View>
         ) : page.template === 'large_photo' ? (
           <View style={{ flex: 1 }}>
-            {page.photo_urls?.[0] && <Image src={page.photo_urls[0]} style={s.photoLarge} />}
+            {page.photo_urls?.[0] && (
+              <View style={s.photoLargeFrame}>
+                <Image src={page.photo_urls[0]} style={s.photoLarge} />
+              </View>
+            )}
             {page.body_text && <Text style={s.bodyText}>{page.body_text}</Text>}
           </View>
         ) : page.template === 'grid' ? (
           <View style={{ flex: 1 }}>
-            <View style={s.photoGrid}>
-              {(page.photo_urls || []).slice(0, 4).map((url, i) => (
-                <Image key={i} src={url} style={s.photoGridItem} />
-              ))}
-            </View>
+            {(() => {
+              const photos = (page.photo_urls || []).slice(0, 2)
+              if (photos.length === 1) {
+                return (
+                  <View style={s.photoGridFrameSingle}>
+                    <Image src={photos[0]} style={s.photoGridItem} />
+                  </View>
+                )
+              }
+              return (
+                <View style={s.photoGrid}>
+                  {photos.map((url, i) => (
+                    <View key={i} style={s.photoGridFrame}>
+                      <Image src={url} style={s.photoGridItem} />
+                    </View>
+                  ))}
+                </View>
+              )
+            })()}
             {page.body_text && <Text style={s.bodyText}>{page.body_text}</Text>}
           </View>
         ) : (
@@ -192,7 +244,11 @@ export function SinglePagePDF({ page, album, subject }: SinglePageProps) {
               {page.title && <Text style={s.pageTitle}>{page.title}</Text>}
               {page.body_text && <Text style={s.bodyText}>{page.body_text}</Text>}
             </View>
-            {page.photo_urls?.[0] && <Image src={page.photo_urls[0]} style={s.photo} />}
+            {page.photo_urls?.[0] && (
+              <View style={s.photoFrame}>
+                <Image src={page.photo_urls[0]} style={s.photo} />
+              </View>
+            )}
           </View>
         )}
 
@@ -244,17 +300,33 @@ export function AlbumPDF({ album, pages, subject }: Props) {
           ) : page.template === 'large_photo' ? (
             <View style={{ flex: 1 }}>
               {page.photo_urls?.[0] && (
-                <Image src={page.photo_urls[0]} style={s.photoLarge} />
+                <View style={s.photoLargeFrame}>
+                  <Image src={page.photo_urls[0]} style={s.photoLarge} />
+                </View>
               )}
               {page.body_text && <Text style={s.bodyText}>{page.body_text}</Text>}
             </View>
           ) : page.template === 'grid' ? (
             <View style={{ flex: 1 }}>
-              <View style={s.photoGrid}>
-                {(page.photo_urls || []).slice(0, 4).map((url, i) => (
-                  <Image key={i} src={url} style={s.photoGridItem} />
-                ))}
-              </View>
+              {(() => {
+                const photos = (page.photo_urls || []).slice(0, 2)
+                if (photos.length === 1) {
+                  return (
+                    <View style={s.photoGridFrameSingle}>
+                      <Image src={photos[0]} style={s.photoGridItem} />
+                    </View>
+                  )
+                }
+                return (
+                  <View style={s.photoGrid}>
+                    {photos.map((url, i) => (
+                      <View key={i} style={s.photoGridFrame}>
+                        <Image src={url} style={s.photoGridItem} />
+                      </View>
+                    ))}
+                  </View>
+                )
+              })()}
               {page.body_text && <Text style={s.bodyText}>{page.body_text}</Text>}
             </View>
           ) : (
@@ -265,7 +337,9 @@ export function AlbumPDF({ album, pages, subject }: Props) {
                 {page.body_text && <Text style={s.bodyText}>{page.body_text}</Text>}
               </View>
               {page.photo_urls?.[0] && (
-                <Image src={page.photo_urls[0]} style={s.photo} />
+                <View style={s.photoFrame}>
+                  <Image src={page.photo_urls[0]} style={s.photo} />
+                </View>
               )}
             </View>
           )}

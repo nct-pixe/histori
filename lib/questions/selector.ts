@@ -10,7 +10,11 @@ export function selectQuestions(
   const maxDifficulty: DifficultyLevel = careLevel === 3 ? 1 : careLevel === 2 ? 2 : 3
 
   const pool = questions.filter(
-    (q) => q.lifeStage === lifeStage && q.difficulty <= maxDifficulty
+    (q) =>
+      q.lifeStage === lifeStage &&
+      q.difficulty <= maxDifficulty &&
+      q.category !== 'music_induced' &&
+      q.category !== 'video_induced'
   )
 
   // opener を先に、deepdive・integration を後に
@@ -19,18 +23,6 @@ export function selectQuestions(
 
   const sorted = [...shuffle(openers), ...shuffle(others)]
   return sorted.slice(0, count)
-}
-
-export function selectMusicQuestions(lifeStage: LifeStage): Question[] {
-  return questions.filter(
-    (q) => q.category === 'music_induced' && q.lifeStage === lifeStage
-  )
-}
-
-export function selectVideoQuestions(lifeStage: LifeStage): Question[] {
-  return questions.filter(
-    (q) => q.category === 'video_induced' && q.lifeStage === lifeStage
-  )
 }
 
 function shuffle<T>(arr: T[]): T[] {

@@ -27,26 +27,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ background: '#F0F4F8' }}>
+    <div className="min-h-screen w-screen flex" style={{ background: '#F0F4F8' }}>
       {/* 左：ビジュアル */}
       <div
-        className="hidden lg:flex flex-1 flex-col justify-center px-16"
-        style={{ background: 'linear-gradient(135deg, #1B3A6B 0%, #0D9488 100%)' }}
+        className="hidden lg:flex flex-1 items-center justify-center relative overflow-hidden"
+        style={{ background: '#F8F9FB' }}
       >
-        <div className="text-white">
-          <h1 className="text-5xl font-bold mb-4 leading-tight" style={{ fontFamily: 'serif' }}>
-            histori.
-          </h1>
-          <p className="text-2xl font-light mb-6 leading-relaxed opacity-90">
-            写真・音楽・動画で、<br />
-            あなたの人生を<br />
-            もう一度ひらく。
-          </p>
-          <p className="text-base opacity-70">
-            大切な思い出を、未来の家族へ。<br />
-            認知症ケアのためのデジタル回想法プラットフォーム
-          </p>
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/top-hero-histori.png"
+          alt="histori ヒーロービジュアル"
+          className="w-full h-full object-cover"
+        />
       </div>
 
       {/* 右：ログインフォーム */}
@@ -75,6 +67,8 @@ export default function LoginPage() {
                 </label>
                 <input
                   type="email"
+                  name="email"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -91,6 +85,8 @@ export default function LoginPage() {
                 </label>
                 <input
                   type="password"
+                  name="password"
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required

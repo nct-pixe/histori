@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import type { Subject } from '@/lib/supabase/types'
+import { MessageCircle, BookOpen, Video, UserPlus, Heart } from 'lucide-react'
 
 export default async function DashboardPage() {
   let subjects: Subject[] | null = null
@@ -19,23 +20,23 @@ export default async function DashboardPage() {
   return (
     <div>
       {/* ページヘッダー */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="rounded-2xl p-6 mb-8 flex items-start justify-between gap-3" style={{ background: 'linear-gradient(135deg, #FFEDD5 0%, #FFF9E8 100%)', border: '1px solid #FED7AA' }}>
         <div>
-          <p className="text-sm font-semibold tracking-widest mb-1" style={{ color: '#0D9488' }}>DASHBOARD</p>
-          <h1 className="text-4xl font-bold" style={{ color: '#1B3A6B', fontFamily: 'serif' }}>ダッシュボード</h1>
-          <p className="mt-1 text-base" style={{ color: '#64748B' }}>回想支援の進捗と、対象者ごとの状態をひと目で確認できます</p>
+          <p className="text-xs font-semibold tracking-widest mb-1" style={{ color: '#EA580C' }}>DASHBOARD</p>
+          <h1 className="text-2xl md:text-4xl font-bold leading-tight mb-1" style={{ color: '#1B3A6B', fontFamily: 'serif' }}>ダッシュボード</h1>
+          <p className="text-sm" style={{ color: '#78716C' }}>回想支援の進捗と、対象者ごとの状態をひと目で確認できます</p>
         </div>
         <Link
           href="/setup"
-          className="flex items-center gap-2 px-6 py-3 rounded-full text-base font-bold text-white transition-colors hover:opacity-90"
-          style={{ background: '#0D9488' }}
+          className="flex-shrink-0 flex items-center gap-1 px-4 py-2 rounded-full text-sm font-bold text-white transition-colors hover:opacity-90"
+          style={{ background: '#F97316' }}
         >
-          ＋ 主人公を登録
+          ＋ 登録
         </Link>
       </div>
 
       {subjects && subjects.length > 0 ? (
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 400px))' }}>
           {subjects.map((subject) => (
             <SubjectCard key={subject.id} subject={subject} />
           ))}
@@ -58,25 +59,32 @@ function SubjectCard({ subject }: { subject: Subject }) {
   }
 
   const care = careLabels[subject.care_level ?? 2]
+  const initial = subject.name?.[0] ?? '？'
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden" style={{ border: '1px solid #E2E8F0' }}>
+    <div className="rounded-2xl shadow-sm overflow-hidden" style={{ background: '#FFFDF9', border: '1px solid #EDE6D8' }}>
       {/* カードヘッダー */}
-      <div className="px-6 pt-6 pb-4" style={{ borderBottom: '1px solid #F1F5F9' }}>
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 className="text-2xl font-bold" style={{ color: '#1B3A6B', fontFamily: 'serif' }}>
-              {subject.name} さん
-            </h2>
-            <p className="text-sm mt-1" style={{ color: '#64748B' }}>
-              {subject.birth_year && `${subject.birth_year}年生まれ`}
-              {subject.birth_region && `　${subject.birth_region}`}
-            </p>
-            {subject.career && (
-              <p className="text-sm mt-0.5" style={{ color: '#94A3B8' }}>{subject.career}</p>
-            )}
+      <div className="px-6 pt-6 pb-4" style={{ borderBottom: '1px solid #F5EFE3' }}>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3 min-w-0">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 text-lg font-bold"
+              style={{ background: '#FFEDD5', color: '#EA580C', fontFamily: 'serif' }}>
+              {initial}
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-2xl font-bold truncate" style={{ color: '#1B3A6B', fontFamily: 'serif' }}>
+                {subject.name} さん
+              </h2>
+              <p className="text-sm mt-1" style={{ color: '#78716C' }}>
+                {subject.birth_year && `${subject.birth_year}年生まれ`}
+                {subject.birth_region && `　${subject.birth_region}`}
+              </p>
+              {subject.career && (
+                <p className="text-sm mt-0.5" style={{ color: '#A8A29E' }}>{subject.career}</p>
+              )}
+            </div>
           </div>
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex flex-col items-end gap-2 flex-shrink-0">
             {care && (
               <span
                 className="px-3 py-1 rounded-full text-xs font-bold text-white"
@@ -88,7 +96,7 @@ function SubjectCard({ subject }: { subject: Subject }) {
             {subject.session_goal && (
               <span
                 className="px-3 py-1 rounded-full text-xs font-bold"
-                style={{ background: '#F0FDF4', color: '#0D9488' }}
+                style={{ background: '#FFEDD5', color: '#EA580C' }}
               >
                 {goalLabels[subject.session_goal]}
               </span>
@@ -99,33 +107,20 @@ function SubjectCard({ subject }: { subject: Subject }) {
 
       {/* アクションボタン */}
       <div className="p-4 grid grid-cols-2 gap-3">
-        <Link
-          href={`/session?subjectId=${subject.id}`}
-          className="flex items-center justify-center gap-2 h-12 rounded-xl text-base font-bold text-white transition-opacity hover:opacity-90"
-          style={{ background: '#1B3A6B' }}
-        >
-          💬 セッション
+        <Link href={`/session?subjectId=${subject.id}`}
+          className="flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-bold text-white transition-opacity hover:opacity-90"
+          style={{ background: '#1B3A6B' }}>
+          <MessageCircle size={17} strokeWidth={2} /> セッション
         </Link>
-        <Link
-          href={`/album?subjectId=${subject.id}`}
-          className="flex items-center justify-center gap-2 h-12 rounded-xl text-base font-bold text-white transition-opacity hover:opacity-90"
-          style={{ background: '#0D9488' }}
-        >
-          📔 アルバム
+        <Link href={`/album?subjectId=${subject.id}`}
+          className="flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-bold text-white transition-opacity hover:opacity-90"
+          style={{ background: '#0D9488' }}>
+          <BookOpen size={17} strokeWidth={2} /> アルバム
         </Link>
-        <Link
-          href={`/music?subjectId=${subject.id}`}
-          className="flex items-center justify-center gap-2 h-12 rounded-xl text-base font-bold text-white transition-opacity hover:opacity-90"
-          style={{ background: '#D97706' }}
-        >
-          🎵 音楽
-        </Link>
-        <Link
-          href={`/video?subjectId=${subject.id}`}
-          className="flex items-center justify-center gap-2 h-12 rounded-xl text-base font-bold text-white transition-opacity hover:opacity-90"
-          style={{ background: '#475569' }}
-        >
-          🎬 動画
+        <Link href={`/video?subjectId=${subject.id}`}
+          className="flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-bold text-white transition-opacity hover:opacity-90 col-span-2"
+          style={{ background: '#F97316' }}>
+          <Video size={17} strokeWidth={2} /> 動画
         </Link>
       </div>
     </div>
@@ -134,23 +129,21 @@ function SubjectCard({ subject }: { subject: Subject }) {
 
 function EmptyState() {
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-16 text-center" style={{ border: '1px solid #E2E8F0' }}>
-      <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: '#F0FDF4' }}>
-        <span className="text-4xl">📖</span>
+    <div className="rounded-2xl shadow-sm p-16 text-center" style={{ background: '#FFFDF9', border: '1px solid #EDE6D8' }}>
+      <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: '#FFEDD5' }}>
+        <Heart size={32} strokeWidth={1.8} style={{ color: '#EA580C' }} />
       </div>
       <h2 className="text-2xl font-bold mb-3" style={{ color: '#1B3A6B', fontFamily: 'serif' }}>
         まだ主人公が登録されていません
       </h2>
-      <p className="text-base mb-8" style={{ color: '#64748B' }}>
+      <p className="text-base mb-8" style={{ color: '#78716C' }}>
         回想法セッションを始めるために、<br />
         まず大切な方のプロフィールを登録しましょう。
       </p>
-      <Link
-        href="/setup"
+      <Link href="/setup"
         className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-lg font-bold text-white transition-opacity hover:opacity-90"
-        style={{ background: '#1B3A6B' }}
-      >
-        プロフィールを登録する
+        style={{ background: '#1B3A6B' }}>
+        <UserPlus size={20} /> プロフィールを登録する
       </Link>
     </div>
   )

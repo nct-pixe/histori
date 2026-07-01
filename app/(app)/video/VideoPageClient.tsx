@@ -13,6 +13,11 @@ interface Props {
 
 const SESSION_MINUTES = 30
 
+const inputStyle = {
+  border: '1.5px solid #E2E8F0', borderRadius: '12px',
+  padding: '10px 14px', fontSize: '1rem', color: '#1F2937', outline: 'none', width: '100%',
+}
+
 export default function VideoPageClient({ subjects, selectedSubject, videoFiles }: Props) {
   const [activeVideo, setActiveVideo] = useState<VideoFile | null>(null)
   const [timeLeft, setTimeLeft] = useState(SESSION_MINUTES * 60)
@@ -33,11 +38,8 @@ export default function VideoPageClient({ subjects, selectedSubject, videoFiles 
     if (sessionActive) {
       timerRef.current = setInterval(() => {
         setTimeLeft((t) => {
-          if (t <= 1) {
-            clearInterval(timerRef.current!)
-            setSessionActive(false)
-            return 0
-          }
+          if (t <= 1) { clearInterval(timerRef.current!); setSessionActive(false); return 0 }
+          if (t === 300) alert('残り5分です')
           return t - 1
         })
       }, 1000)
@@ -51,6 +53,7 @@ export default function VideoPageClient({ subjects, selectedSubject, videoFiles 
     setActiveVideo(video)
     setTimeLeft(SESSION_MINUTES * 60)
     setSessionActive(true)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   function formatTime(secs: number) {
@@ -76,9 +79,7 @@ export default function VideoPageClient({ subjects, selectedSubject, videoFiles 
       title: uploadTitle || 'YouTube動画',
       file_url: `https://www.youtube.com/embed/${videoId}`,
     })
-    setYoutubeUrl('')
-    setUploadTitle('')
-    setUploading(false)
+    setYoutubeUrl(''); setUploadTitle(''); setUploading(false)
     window.location.reload()
   }
 
@@ -86,108 +87,134 @@ export default function VideoPageClient({ subjects, selectedSubject, videoFiles 
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-[#1B3A6B] mb-2">動画回想セッション</h1>
-      {selectedSubject && <p className="text-xl text-gray-500 mb-8">{selectedSubject.name} さんの動画ライブラリ</p>}
+      {/* ページヘッダー */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <p className="text-sm font-semibold tracking-widest mb-1" style={{ color: '#0D9488' }}>VIDEO</p>
+          <h1 className="text-4xl font-bold" style={{ color: '#1B3A6B', fontFamily: 'serif' }}>動画回想セッション</h1>
+          {selectedSubject && <p className="text-base mt-1" style={{ color: '#64748B' }}>{selectedSubject.name} さんの動画ライブラリ</p>}
+        </div>
+      </div>
 
+      {/* 主人公切替 */}
       {subjects.length > 1 && (
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-6 flex gap-3 flex-wrap">
+        <div className="bg-white rounded-2xl p-4 mb-6 flex gap-2 flex-wrap" style={{ border: '1px solid #E2E8F0' }}>
           {subjects.map((s) => (
             <Link key={s.id} href={`/video?subjectId=${s.id}`}
-              className={`px-5 py-3 rounded-xl text-lg font-medium transition-colors ${
-                s.id === selectedSubject?.id ? 'bg-[#1B3A6B] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}>
+              className="px-5 py-2.5 rounded-full text-base font-medium transition-colors"
+              style={s.id === selectedSubject?.id ? { background: '#1B3A6B', color: 'white' } : { background: '#F1F5F9', color: '#475569' }}>
               {s.name} さん
             </Link>
           ))}
         </div>
       )}
 
-      {/* セッション中 */}
+      {/* セッション中パネル */}
       {activeVideo && (
-        <div className="bg-[#1B3A6B] rounded-2xl p-6 mb-8 text-white">
-          <div className={`flex items-center justify-between mb-4 p-3 rounded-xl ${isAlert ? 'bg-red-500 animate-pulse' : 'bg-[#162d54]'}`}>
-            <span className="text-xl font-bold">⏱ セッション残り時間</span>
-            <span className="text-3xl font-bold font-mono">{formatTime(timeLeft)}</span>
-            <button onClick={() => { setSessionActive(false); setActiveVideo(null) }}
-              className="h-10 px-4 bg-white text-[#1B3A6B] text-base font-bold rounded-xl">
-              終了
-            </button>
+        <div className="bg-white rounded-2xl mb-8 overflow-hidden" style={{ border: '1px solid #E2E8F0' }}>
+          {/* タイマーバー */}
+          <div className="px-6 py-4 flex items-center justify-between"
+            style={{ background: isAlert ? '#FEF2F2' : '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
+            <div>
+              <p className="text-xs font-semibold tracking-widest mb-0.5" style={{ color: isAlert ? '#DC2626' : '#0D9488' }}>SESSION TIMER</p>
+              <span className="text-3xl font-bold font-mono" style={{ color: isAlert ? '#DC2626' : '#1B3A6B' }}>{formatTime(timeLeft)}</span>
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-bold mb-1" style={{ color: '#1B3A6B', fontFamily: 'serif' }}>{activeVideo.title}</p>
+              <button onClick={() => { setSessionActive(false); setActiveVideo(null) }}
+                className="px-5 py-2 rounded-full text-sm font-bold text-white hover:opacity-90"
+                style={{ background: '#94A3B8' }}>
+                セッション終了
+              </button>
+            </div>
           </div>
 
-          <div className="bg-black rounded-xl overflow-hidden mb-4">
+          {/* 動画プレイヤー */}
+          <div style={{ background: '#000' }}>
             {activeVideo.file_url.includes('youtube.com/embed') ? (
-              <iframe
-                src={activeVideo.file_url}
-                className="w-full aspect-video"
-                allowFullScreen
-              />
+              <iframe src={activeVideo.file_url} className="w-full aspect-video" allowFullScreen />
             ) : (
-              <video ref={videoRef} src={activeVideo.file_url} controls className="w-full max-h-72" />
+              <video ref={videoRef} src={activeVideo.file_url} controls className="w-full aspect-video" />
             )}
           </div>
-          <p className="text-xl font-bold mb-4">{activeVideo.title}</p>
 
-          <p className="text-base text-teal-200 mb-3">反応を記録する</p>
-          <div className="grid grid-cols-4 gap-3">
-            {[
-              { type: 'smile' as const, emoji: '😊', label: '笑顔' },
-              { type: 'talk' as const, emoji: '💬', label: '発話' },
-              { type: 'tear' as const, emoji: '😢', label: '涙' },
-              { type: 'none' as const, emoji: '○', label: '無反応' },
-            ].map((r) => (
-              <button key={r.type} onClick={() => recordReaction(r.type)}
-                className="h-16 bg-white/20 hover:bg-white/30 rounded-xl text-2xl flex flex-col items-center justify-center gap-1">
-                <span>{r.emoji}</span>
-                <span className="text-sm font-medium">{r.label}</span>
-              </button>
-            ))}
+          {/* 反応ボタン */}
+          <div className="p-6">
+            <p className="text-sm font-semibold mb-3" style={{ color: '#64748B' }}>反応を記録する</p>
+            <div className="grid grid-cols-4 gap-3">
+              {[
+                { type: 'smile' as const, emoji: '😊', label: '笑顔', bg: '#FEF3C7', color: '#92400E' },
+                { type: 'talk' as const, emoji: '💬', label: '発話', bg: '#EFF6FF', color: '#1D4ED8' },
+                { type: 'tear' as const, emoji: '😢', label: '涙', bg: '#F0FDF4', color: '#166534' },
+                { type: 'none' as const, emoji: '○', label: '無反応', bg: '#F8FAFC', color: '#64748B' },
+              ].map((r) => (
+                <button key={r.type} onClick={() => recordReaction(r.type)}
+                  className="py-4 rounded-2xl flex flex-col items-center gap-1.5 hover:opacity-80 transition-opacity"
+                  style={{ background: r.bg }}>
+                  <span className="text-2xl">{r.emoji}</span>
+                  <span className="text-xs font-bold" style={{ color: r.color }}>{r.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
       {/* 動画リスト */}
-      {videoFiles.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 mb-8">
-          {videoFiles.map((video) => (
-            <div key={video.id} className="bg-white rounded-2xl border border-gray-100 p-5">
-              <div className="text-4xl mb-2">🎬</div>
-              <p className="text-xl font-bold text-[#1F2937] mb-1">{video.title}</p>
-              {video.description && <p className="text-base text-gray-500 mb-3">{video.description}</p>}
-              <p className="text-base text-gray-400 mb-4">
-                反応記録: {(video.reaction_log || []).length} 件
-              </p>
-              <button
-                onClick={() => startSession(video)}
-                className="w-full h-14 bg-[#D97706] text-white text-lg font-bold rounded-xl hover:bg-amber-600"
-              >
-                ▶ セッション開始
-              </button>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="text-lg text-gray-500 mb-6">まだ動画がありません</p>
-      )}
+      <section className="mb-8">
+        <h2 className="text-xl font-bold mb-4" style={{ color: '#1B3A6B', fontFamily: 'serif' }}>🎬 動画ライブラリ</h2>
+        {videoFiles.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-2">
+            {videoFiles.map((video) => (
+              <div key={video.id} className="bg-white rounded-2xl overflow-hidden hover:shadow-sm transition-shadow"
+                style={{ border: '1px solid #E2E8F0' }}>
+                {/* サムネイル */}
+                <div className="aspect-video flex items-center justify-center text-5xl"
+                  style={{ background: 'linear-gradient(135deg, #EFF6FF 0%, #F0FDF4 100%)' }}>
+                  🎬
+                </div>
+                <div className="p-4">
+                  <p className="text-base font-bold mb-1 truncate" style={{ color: '#1B3A6B', fontFamily: 'serif' }}>{video.title}</p>
+                  {video.description && <p className="text-sm mb-2 line-clamp-2" style={{ color: '#64748B' }}>{video.description}</p>}
+                  <p className="text-xs mb-3" style={{ color: '#94A3B8' }}>反応記録: {(video.reaction_log || []).length} 件</p>
+                  <button onClick={() => startSession(video)}
+                    className="w-full py-3 rounded-full text-sm font-bold text-white hover:opacity-90"
+                    style={{ background: '#D97706' }}>
+                    ▶ セッション開始
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl p-12 text-center" style={{ border: '1px solid #E2E8F0' }}>
+            <div className="text-5xl mb-4">🎬</div>
+            <p className="text-base" style={{ color: '#94A3B8' }}>まだ動画が登録されていません</p>
+          </div>
+        )}
+      </section>
 
-      {/* YouTube追加 */}
+      {/* YouTube追加フォーム */}
       {selectedSubject && (
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
-          <h3 className="text-xl font-bold text-[#1F2937]">YouTube動画を追加</h3>
-          <p className="text-base text-gray-500">YouTubeのURLを貼り付けてください</p>
-          <input type="text" value={uploadTitle} onChange={(e) => setUploadTitle(e.target.value)}
-            className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-[#0D9488]"
-            placeholder="動画のタイトル" />
-          <input type="url" value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)}
-            className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-[#0D9488]"
-            placeholder="https://www.youtube.com/watch?v=..." />
-          <button
-            onClick={handleAddYoutube}
-            disabled={!youtubeUrl || uploading}
-            className="w-full h-14 bg-[#D97706] text-white text-lg font-bold rounded-xl disabled:opacity-50 hover:bg-amber-600"
-          >
-            {uploading ? '追加中...' : '動画を追加'}
-          </button>
-        </div>
+        <section>
+          <h2 className="text-xl font-bold mb-4" style={{ color: '#1B3A6B', fontFamily: 'serif' }}>YouTube動画を追加</h2>
+          <div className="bg-white rounded-2xl p-6 space-y-4" style={{ border: '1px solid #E2E8F0' }}>
+            <p className="text-sm" style={{ color: '#64748B' }}>YouTubeのURLを貼り付けてください</p>
+            <input type="text" value={uploadTitle} onChange={(e) => setUploadTitle(e.target.value)}
+              style={inputStyle} placeholder="動画のタイトル"
+              onFocus={(e) => e.target.style.borderColor = '#0D9488'}
+              onBlur={(e) => e.target.style.borderColor = '#E2E8F0'} />
+            <input type="url" value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)}
+              style={inputStyle} placeholder="https://www.youtube.com/watch?v=..."
+              onFocus={(e) => e.target.style.borderColor = '#0D9488'}
+              onBlur={(e) => e.target.style.borderColor = '#E2E8F0'} />
+            <button onClick={handleAddYoutube} disabled={!youtubeUrl || uploading}
+              className="w-full py-3.5 rounded-full text-base font-bold text-white disabled:opacity-50 hover:opacity-90"
+              style={{ background: '#D97706' }}>
+              {uploading ? '追加中...' : '動画を追加'}
+            </button>
+          </div>
+        </section>
       )}
     </div>
   )

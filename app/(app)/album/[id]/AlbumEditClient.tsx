@@ -8,10 +8,10 @@ import type { Album, AlbumPage, Subject } from '@/lib/supabase/types'
 import Link from 'next/link'
 
 const TEMPLATES = [
-  { id: 'standard',    label: '標準',     desc: '写真＋テキスト' },
-  { id: 'large_photo', label: '写真大',   desc: '大きな写真メイン' },
-  { id: 'text_only',   label: 'テキスト', desc: '文章のみ' },
-  { id: 'grid',        label: 'グリッド', desc: '写真4枚並び' },
+  { id: 'standard',    label: '標準',   desc: '写真＋テキスト', icon: '📄' },
+  { id: 'large_photo', label: '写真大', desc: '大きな写真メイン', icon: '🖼' },
+  { id: 'text_only',   label: 'テキスト', desc: '文章のみ', icon: '📝' },
+  { id: 'grid',        label: 'グリッド', desc: '写真4枚', icon: '⊞' },
 ]
 
 const STAGE_LABELS: Record<string, string> = {
@@ -38,6 +38,7 @@ export default function AlbumEditClient({ album, pages: initialPages, subject, a
   const [publishing, setPublishing] = useState(false)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [showAnswerPicker, setShowAnswerPicker] = useState(false)
+  const [showPageList, setShowPageList] = useState(true)
   const router = useRouter()
   const supabase = createClient()
 
@@ -51,6 +52,7 @@ export default function AlbumEditClient({ album, pages: initialPages, subject, a
     if (!error && data) {
       setPages((prev) => [...prev, data as AlbumPage])
       setEditing(data as AlbumPage)
+      setShowPageList(false)
     }
     setSaving(false)
   }
@@ -96,97 +98,115 @@ export default function AlbumEditClient({ album, pages: initialPages, subject, a
     setShowAnswerPicker(false)
   }
 
+  function selectPage(page: AlbumPage) {
+    setEditing(page)
+    setShowPageList(false)
+  }
+
   return (
     <div>
       {/* ヘッダー */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <Link href="/album" className="text-sm font-medium hover:underline" style={{ color: '#0D9488' }}>
-            ← アルバム一覧
-          </Link>
-          <h1 className="text-3xl font-bold mt-1" style={{ color: '#1B3A6B', fontFamily: 'serif' }}>{album.title}</h1>
-          <p className="text-sm mt-0.5" style={{ color: '#64748B' }}>{subject?.name} さん</p>
-        </div>
-        <div className="flex gap-2 flex-wrap justify-end">
-          <Link href={`/album/${album.id}/preview`}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-bold text-white hover:opacity-90"
-            style={{ background: '#0D9488' }}>
-            👁 プレビュー
-          </Link>
-          <Link href={`/api/pdf?albumId=${album.id}`} target="_blank"
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-bold text-white hover:opacity-90"
-            style={{ background: '#D97706' }}>
-            📄 PDF出力
-          </Link>
-          <button onClick={togglePublish} disabled={publishing}
-            className="px-4 py-2.5 rounded-full text-sm font-bold transition-colors"
-            style={album.is_published
-              ? { background: '#F0FDF4', color: '#16A34A' }
-              : { background: '#F1F5F9', color: '#64748B' }}>
-            {album.is_published ? '✓ 公開中' : '🔒 非公開'}
-          </button>
+      <div className="mb-5">
+        <Link href="/album" className="text-sm font-medium hover:underline inline-flex items-center gap-1 mb-2" style={{ color: '#0D9488' }}>
+          ← アルバム一覧
+        </Link>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-xl md:text-3xl font-bold leading-tight truncate" style={{ color: '#1B3A6B', fontFamily: 'serif' }}>{album.title}</h1>
+            <p className="text-sm mt-0.5" style={{ color: '#64748B' }}>{subject?.name} さん</p>
+          </div>
+          <div className="flex gap-2 flex-shrink-0">
+            <Link href={`/album/${album.id}/preview`}
+              className="flex items-center gap-1 px-3 py-2 rounded-full text-xs font-bold text-white hover:opacity-90"
+              style={{ background: '#0D9488' }}>
+              👁 プレビュー
+            </Link>
+            <Link href={`/api/pdf?albumId=${album.id}`} target="_blank"
+              className="flex items-center gap-1 px-3 py-2 rounded-full text-xs font-bold text-white hover:opacity-90"
+              style={{ background: '#D97706' }}>
+              📄 PDF
+            </Link>
+            <button onClick={togglePublish} disabled={publishing}
+              className="px-3 py-2 rounded-full text-xs font-bold"
+              style={album.is_published ? { background: '#F0FDF4', color: '#16A34A' } : { background: '#F1F5F9', color: '#64748B' }}>
+              {album.is_published ? '✓ 公開' : '🔒'}
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
-        {/* ページ一覧（左） */}
-        <div className="col-span-1 space-y-2">
-          <h2 className="text-base font-bold mb-3" style={{ color: '#374151' }}>ページ一覧</h2>
-          {pages.map((page) => (
-            <div key={page.id} onClick={() => setEditing(page)}
-              className="p-4 rounded-xl cursor-pointer transition-all"
-              style={{
-                border: editing?.id === page.id ? '2px solid #0D9488' : '1.5px solid #E2E8F0',
-                background: editing?.id === page.id ? '#F0FDF4' : 'white',
-              }}>
-              <div className="flex items-center justify-between">
-                <span className="text-base font-bold" style={{ color: '#1B3A6B' }}>
-                  {page.page_number} ページ
-                </span>
-                <button onClick={(e) => { e.stopPropagation(); deletePage(page.id) }}
-                  className="text-xs hover:opacity-80" style={{ color: '#EF4444' }}>
-                  削除
-                </button>
+      {/* モバイル: ページ一覧⇔編集の切り替えタブ */}
+      <div className="md:hidden flex mb-4 rounded-xl overflow-hidden" style={{ border: '1px solid #E2E8F0', background: 'white' }}>
+        <button onClick={() => setShowPageList(true)} className="flex-1 py-2.5 text-sm font-bold transition-colors"
+          style={showPageList ? { background: '#1B3A6B', color: 'white' } : { color: '#64748B' }}>
+          📑 ページ一覧
+        </button>
+        <button onClick={() => setShowPageList(false)} className="flex-1 py-2.5 text-sm font-bold transition-colors"
+          style={!showPageList ? { background: '#1B3A6B', color: 'white' } : { color: '#64748B' }}>
+          ✏️ 編集
+        </button>
+      </div>
+
+      {/* PC: 2カラム / モバイル: タブ切り替え */}
+      <div className="md:grid md:grid-cols-3 md:gap-6">
+        {/* ページ一覧 */}
+        <div className={`md:col-span-1 md:block ${showPageList ? 'block' : 'hidden'}`}>
+          <h2 className="text-sm font-bold mb-3" style={{ color: '#64748B' }}>ページ一覧</h2>
+          <div className="space-y-2">
+            {pages.map((page) => (
+              <div key={page.id} onClick={() => selectPage(page)}
+                className="p-4 rounded-xl cursor-pointer transition-all"
+                style={{
+                  border: editing?.id === page.id ? '2px solid #0D9488' : '1.5px solid #E2E8F0',
+                  background: editing?.id === page.id ? '#F0FDF4' : 'white',
+                }}>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold" style={{ color: '#1B3A6B' }}>
+                    {page.page_number}ページ
+                    {page.life_stage && <span className="ml-2 text-xs font-normal" style={{ color: '#0D9488' }}>{STAGE_LABELS[page.life_stage]}</span>}
+                  </span>
+                  <button onClick={(e) => { e.stopPropagation(); deletePage(page.id) }}
+                    className="text-xs px-2 py-1 rounded-full hover:opacity-80"
+                    style={{ background: '#FEF2F2', color: '#EF4444' }}>
+                    削除
+                  </button>
+                </div>
+                {page.title && <p className="text-sm mt-1 truncate" style={{ color: '#64748B' }}>{page.title}</p>}
+                {(page.photo_urls?.length ?? 0) > 0 && (
+                  <p className="text-xs mt-1" style={{ color: '#94A3B8' }}>📷 {page.photo_urls!.length}枚</p>
+                )}
               </div>
-              {page.title && <p className="text-sm mt-0.5 truncate" style={{ color: '#64748B' }}>{page.title}</p>}
-              {page.life_stage && (
-                <span className="text-xs font-medium" style={{ color: '#0D9488' }}>{STAGE_LABELS[page.life_stage]}</span>
-              )}
-              {(page.photo_urls?.length ?? 0) > 0 && (
-                <p className="text-xs mt-0.5" style={{ color: '#94A3B8' }}>📷 {page.photo_urls!.length}枚</p>
-              )}
-            </div>
-          ))}
-          <button onClick={addPage} disabled={saving}
-            className="w-full py-3.5 rounded-xl text-sm font-medium transition-colors"
-            style={{ border: '1.5px dashed #CBD5E1', color: '#64748B' }}
-            onMouseOver={(e) => { (e.target as HTMLButtonElement).style.borderColor = '#0D9488'; (e.target as HTMLButtonElement).style.color = '#0D9488' }}
-            onMouseOut={(e) => { (e.target as HTMLButtonElement).style.borderColor = '#CBD5E1'; (e.target as HTMLButtonElement).style.color = '#64748B' }}>
-            ＋ ページを追加
-          </button>
+            ))}
+            <button onClick={addPage} disabled={saving}
+              className="w-full py-3 rounded-xl text-sm font-medium transition-colors"
+              style={{ border: '1.5px dashed #CBD5E1', color: '#64748B', background: 'white' }}>
+              ＋ ページを追加
+            </button>
+          </div>
         </div>
 
-        {/* ページ編集（右） */}
-        <div className="col-span-2">
+        {/* 編集エリア */}
+        <div className={`md:col-span-2 md:block ${!showPageList ? 'block' : 'hidden'}`}>
           {editing ? (
-            <div className="bg-white rounded-2xl p-6 space-y-5" style={{ border: '1px solid #E2E8F0' }}>
-              <h2 className="text-lg font-bold" style={{ color: '#1B3A6B', fontFamily: 'serif' }}>
-                {editing.page_number} ページを編集
+            <div className="bg-white rounded-2xl p-5 space-y-5" style={{ border: '1px solid #E2E8F0' }}>
+              <h2 className="text-base font-bold" style={{ color: '#1B3A6B', fontFamily: 'serif' }}>
+                {editing.page_number}ページを編集
               </h2>
 
-              {/* テンプレート */}
+              {/* レイアウト選択 */}
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>レイアウト</label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
                   {TEMPLATES.map((t) => (
                     <button key={t.id}
                       onClick={() => setEditing({ ...editing, template: t.id as AlbumPage['template'] })}
-                      className="p-3 rounded-xl text-sm transition-all"
+                      className="p-3 rounded-xl text-sm transition-all text-left"
                       style={{
                         border: editing.template === t.id ? '2px solid #0D9488' : '1.5px solid #E2E8F0',
                         background: editing.template === t.id ? '#F0FDF4' : 'white',
                       }}>
-                      <div className="font-bold" style={{ color: '#1B3A6B' }}>{t.label}</div>
+                      <div className="text-lg mb-1">{t.icon}</div>
+                      <div className="font-bold text-sm" style={{ color: '#1B3A6B' }}>{t.label}</div>
                       <div className="text-xs mt-0.5" style={{ color: '#94A3B8' }}>{t.desc}</div>
                     </button>
                   ))}
@@ -222,13 +242,13 @@ export default function AlbumEditClient({ album, pages: initialPages, subject, a
                   <label className="block text-sm font-medium" style={{ color: '#374151' }}>本文（最大200文字）</label>
                   <button onClick={() => setShowAnswerPicker(true)}
                     className="text-xs font-medium hover:underline" style={{ color: '#0D9488' }}>
-                    📝 セッション回答から挿入
+                    📝 回答から挿入
                   </button>
                 </div>
                 <div className="relative">
                   <textarea value={editing.body_text || ''}
                     onChange={(e) => setEditing({ ...editing, body_text: e.target.value.slice(0, 200) })}
-                    rows={4} style={{ ...inputStyle, resize: 'none', paddingRight: '3.5rem' }}
+                    rows={5} style={{ ...inputStyle, resize: 'none', paddingRight: '3.5rem' }}
                     placeholder="思い出のエピソードを入力してください"
                     onFocus={(e) => e.target.style.borderColor = '#0D9488'}
                     onBlur={(e) => e.target.style.borderColor = '#E2E8F0'} />
@@ -272,7 +292,7 @@ export default function AlbumEditClient({ album, pages: initialPages, subject, a
             <div className="bg-white rounded-2xl p-12 text-center" style={{ border: '1px solid #E2E8F0' }}>
               <div className="text-4xl mb-4">📄</div>
               <p className="text-base" style={{ color: '#64748B' }}>
-                左のリストからページを選択するか、<br />「ページを追加」してください
+                ページ一覧からページを選択するか、<br />「ページを追加」してください
               </p>
             </div>
           )}
@@ -281,11 +301,13 @@ export default function AlbumEditClient({ album, pages: initialPages, subject, a
 
       {/* 回答ピッカーモーダル */}
       {showAnswerPicker && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-xl">
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-xl font-bold" style={{ color: '#1B3A6B', fontFamily: 'serif' }}>セッション回答から挿入</h3>
-              <button onClick={() => setShowAnswerPicker(false)} className="text-2xl" style={{ color: '#94A3B8' }}>×</button>
+        <div className="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-5 w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold" style={{ color: '#1B3A6B', fontFamily: 'serif' }}>回答から挿入</h3>
+              <button onClick={() => setShowAnswerPicker(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-xl"
+                style={{ background: '#F1F5F9', color: '#64748B' }}>×</button>
             </div>
             <div className="space-y-3">
               {answers.filter((a) => a.answer_text).map((a) => (
@@ -294,11 +316,11 @@ export default function AlbumEditClient({ album, pages: initialPages, subject, a
                   style={{ border: '1.5px solid #E2E8F0' }}
                   onMouseOver={(e) => (e.currentTarget.style.borderColor = '#0D9488')}
                   onMouseOut={(e) => (e.currentTarget.style.borderColor = '#E2E8F0')}>
-                  <p className="text-xs font-semibold mb-1" style={{ color: '#0D9488' }}>
-                    {a.sessions?.life_stage ? STAGE_LABELS[a.sessions.life_stage] : ''}
-                  </p>
+                  {a.sessions?.life_stage && (
+                    <p className="text-xs font-semibold mb-1" style={{ color: '#0D9488' }}>{STAGE_LABELS[a.sessions.life_stage]}</p>
+                  )}
                   <p className="text-sm font-medium" style={{ color: '#374151' }}>{a.question_text}</p>
-                  <p className="text-sm mt-1" style={{ color: '#64748B' }}>{a.answer_text}</p>
+                  <p className="text-sm mt-1 line-clamp-2" style={{ color: '#64748B' }}>{a.answer_text}</p>
                 </button>
               ))}
               {answers.filter((a) => a.answer_text).length === 0 && (

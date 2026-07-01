@@ -122,8 +122,10 @@ function StandardLayout({ page }: { page: AlbumPage }) {
       </div>
       <div>
         {(page.photo_urls?.length ?? 0) > 0 ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={page.photo_urls![0]} alt="" className="w-full rounded-xl object-cover aspect-square" />
+          <div className="w-full aspect-square rounded-xl p-2" style={{ background: 'white', border: '1px solid #E2E8F0' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={page.photo_urls![0]} alt="" className="w-full h-full rounded-lg object-cover" />
+          </div>
         ) : (
           <div className="w-full aspect-square rounded-xl flex items-center justify-center text-4xl" style={{ background: '#F1F5F9', color: '#CBD5E1' }}>🖼</div>
         )}
@@ -136,8 +138,10 @@ function LargePhotoLayout({ page }: { page: AlbumPage }) {
   return (
     <div>
       {(page.photo_urls?.length ?? 0) > 0 ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={page.photo_urls![0]} alt="" className="w-full aspect-video object-cover" />
+        <div className="w-full aspect-video p-2" style={{ background: 'white' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={page.photo_urls![0]} alt="" className="w-full h-full rounded-lg object-cover" />
+        </div>
       ) : (
         <div className="w-full aspect-video flex items-center justify-center text-6xl" style={{ background: '#F1F5F9', color: '#CBD5E1' }}>🖼</div>
       )}
@@ -159,18 +163,20 @@ function TextOnlyLayout({ page }: { page: AlbumPage }) {
 }
 
 function GridLayout({ page }: { page: AlbumPage }) {
-  const photos = page.photo_urls || []
-  const slots = Array.from({ length: 4 }, (_, i) => photos[i] || null)
+  const photos = (page.photo_urls || []).slice(0, 2)
+  const isSingle = photos.length === 1
   return (
     <div className="p-6">
-      <div className="grid grid-cols-2 gap-3 mb-5">
-        {slots.map((url, i) =>
-          url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img key={i} src={url} alt="" className="w-full aspect-square object-cover rounded-xl" />
-          ) : (
-            <div key={i} className="w-full aspect-square rounded-xl flex items-center justify-center text-3xl" style={{ background: '#F1F5F9', color: '#CBD5E1' }}>🖼</div>
-          )
+      <div className={isSingle ? 'mb-5' : 'grid grid-cols-2 gap-3 mb-5'}>
+        {photos.length > 0 ? (
+          photos.map((url, i) => (
+            <div key={i} className={`${isSingle ? 'aspect-video' : 'aspect-square'} p-2 rounded-xl`} style={{ background: 'white', border: '1px solid #E2E8F0' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={url} alt="" className="w-full h-full object-cover rounded-lg" />
+            </div>
+          ))
+        ) : (
+          <div className="w-full aspect-video rounded-xl flex items-center justify-center text-3xl" style={{ background: '#F1F5F9', color: '#CBD5E1' }}>🖼</div>
         )}
       </div>
       {page.title && <h2 className="text-xl font-bold mb-2" style={{ color: '#1B3A6B', fontFamily: 'serif' }}>{page.title}</h2>}
